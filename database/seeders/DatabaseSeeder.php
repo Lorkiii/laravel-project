@@ -27,9 +27,11 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'is_active' => true,
         ]);
-        // add role and permission seeder
+
         $this->call([
             RolePermissionSeeder::class,
         ]);
+
+        User::where('email', 'admin@example.com')->first()?->assignRole('Administrator');
     }
 }

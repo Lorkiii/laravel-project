@@ -19,24 +19,3 @@ export type LoginCredentials = {
     password: string;
     remember?: boolean;
 };
-
-export type AuthUser = {
-    id: number | string;
-    name: string;
-    email: string;
-};
-
-export type LoginSuccessResponse = {
-    user: AuthUser;
-    token?: string;
-    redirectTo?: string;
-};
-
-export type LoginErrorResponse = {
-    message: string;
-    errors?: Partial<Record<keyof LoginCredentials, string[]>>;
-};
-
-export type LoginResult =
-    | { success: true; data: LoginSuccessResponse }
-    | { success: false; error: LoginErrorResponse };

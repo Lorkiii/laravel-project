@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Mail, Package } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,81 +19,38 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { loginRequest } from '@/lib/auth';
-import {
-    loginSchema,
-    type LoginFormValues,
-    type LoginSuccessResponse,
-} from '@/types/auth';
+import { useLoginForm } from '@/hooks/use-login-form';
+import { cn } from '@/lib/utils';
 
 export type LoginFormProps = {
-    onSuccess?: (data: LoginSuccessResponse) => void;
+    systemName?: string;
     forgotPasswordHref?: string;
     className?: string;
 };
 
 export function LoginForm({
-    onSuccess,
-    forgotPasswordHref = '/forgot-password',
+    systemName = 'Inventory Management System',
+    forgotPasswordHref,
     className,
 }: LoginFormProps) {
-    const [showPassword, setShowPassword] = useState(false);
-    const [serverError, setServerError] = useState<string | null>(null);
-
-    const form = useForm<LoginFormValues>({
-        resolver: zodResolver(loginSchema),
-        defaultValues: {
-            email: '',
-            password: '',
-            remember: false,
-        },
-    });
-
-    const isSubmitting = form.formState.isSubmitting;
-
-    async function onSubmit(values: LoginFormValues) {
-        setServerError(null);
-
-        try {
-            const result = await loginRequest({
-                email: values.email,
-                password: values.password,
-                remember: values.remember,
-            });
-
-            if (!result.success) {
-                setServerError(result.error.message);
-
-                if (result.error.errors) {
-                    Object.entries(result.error.errors).forEach(([field, messages]) => {
-                        if (messages?.[0] && (field === 'email' || field === 'password')) {
-                            form.setError(field, { message: messages[0] });
-                        }
-                    });
-                }
-
-                return;
-            }
-
-            onSuccess?.(result.data);
-
-            if (result.data.redirectTo) {
-                window.location.assign(result.data.redirectTo);
-            }
-        } catch {
-            setServerError('Unable to sign in right now. Please try again.');
-        }
-    }
+    const {
+        form,
+        showPassword,
+        setShowPassword,
+        serverError,
+        isSubmitting,
+        onSubmit,
+    } = useLoginForm();
 
     return (
-        <Card className={`w-full max-w-md border-border/80 shadow-md ${className ?? ''}`}>
+        <Card className={cn('w-full max-w-md border-border/80 shadow-md', className)}>
             <CardHeader className="space-y-4 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                     <Package className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <div className="space-y-1.5">
                     <CardTitle className="text-xl font-semibold tracking-tight sm:text-2xl">
-                        Inventory Management System
+                        {systemName}
                     </CardTitle>
                     <CardDescription className="text-sm leading-relaxed">
                         Manage your inventory efficiently and securely
@@ -206,12 +160,14 @@ export function LoginForm({
                                 )}
                             />
 
-                            <a
-                                href={forgotPasswordHref}
-                                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
-                            >
-                                Forgot password?
-                            </a>
+                            {forgotPasswordHref ? (
+                                <a
+                                    href={forgotPasswordHref}
+                                    className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                                >
+                                    Forgot password?
+                                </a>
+                            ) : null}
                         </div>
 
                         <Button type="submit" className="w-full" disabled={isSubmitting}>
