@@ -21,13 +21,13 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'admin@example.com',
-            'password' => 'password',
+            'password' => 'password12345',
             'is_active' => true,
         ]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password',
+            'password' => 'password12345',
             'remember' => false,
         ]);
 
@@ -52,13 +52,13 @@ class AuthenticationTest extends TestCase
     public function test_inactive_users_cannot_authenticate(): void
     {
         $user = User::factory()->create([
-            'password' => 'password',
+            'password' => 'password12345',
             'is_active' => false,
         ]);
 
         $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password',
+            'password' => 'password12345',
         ]);
 
         $this->assertGuest();
