@@ -37,10 +37,13 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-
+        
+        // the credentials are the email and password from the request
         $credentials = $this->only('email', 'password');
+        // the remember is the remember me checkbox from the request
         $remember = $this->boolean('remember');
 
+        // if the credentials are not valid, throw an error
         if (! Auth::attempt($credentials, $remember)) {
             RateLimiter::hit($this->throttleKey());
 
@@ -49,6 +52,7 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // get the user from the database
         /** @var User $user */
         $user = Auth::user();
 
