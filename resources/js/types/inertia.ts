@@ -4,6 +4,7 @@ export type SharedAuthUser = {
     first_name: string;
     last_name: string;
     username: string;
+    phone_number: string | null;
     roles: string[];
     permissions: string[];
 };
@@ -14,5 +15,19 @@ export type SharedPageProps = {
     };
     auth: {
         user: SharedAuthUser | null;
+    };
+    flash: {
+        success: string | null;
+    };
+};
+
+export type AccountPageProps = {
+    account: {
+        first_name: string;
+        last_name: string;
+        username: string;
+        email: string;
+        phone_number: string | null;
+        roles: string[];
     };
 };

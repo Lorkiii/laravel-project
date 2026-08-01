@@ -1,5 +1,6 @@
 import { AppLogo } from '@/components/layout/app-logo';
 import { SidebarNav } from '@/components/layout/sidebar/sidebar-nav';
+import { SidebarSettingsFooter } from '@/components/layout/sidebar/sidebar-settings-footer';
 import { useAuth } from '@/hooks/use-auth';
 import type { SidebarItem } from '@/lib/navigation/sidebar';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,8 @@ export function AppSidebar({
             <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
                 <SidebarNav items={items} pathname={pathname} onNavigate={onNavigate} />
             </div>
+
+            <SidebarSettingsFooter pathname={pathname} onNavigate={onNavigate} />
         </aside>
     );
 }

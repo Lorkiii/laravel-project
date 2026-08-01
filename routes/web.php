@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Settings\AccountController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,4 +18,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
+    Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');
+    Route::put('/settings/account/password', [AccountController::class, 'updatePassword'])->name('settings.account.password');
 });

@@ -25,9 +25,13 @@ declare module '@inertiajs/core' {
                     first_name: string;
                     last_name: string;
                     username: string;
+                    phone_number: string | null;
                     roles: string[];
                     permissions: string[];
                 } | null;
+            };
+            flash: {
+                success: string | null;
             };
         };
     }

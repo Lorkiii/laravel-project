@@ -65,7 +65,7 @@ export function isSidebarPathActive(pathname: string, href?: string): boolean {
         return true;
     }
 
-    if (href === '/') {
+    if (href === "/") {
         return false;
     }
 
@@ -80,5 +80,7 @@ export function groupContainsActivePath(
         return false;
     }
 
-    return item.children.some((child) => isSidebarPathActive(pathname, child.href));
+    return item.children.some((child) =>
+        isSidebarPathActive(pathname, child.href),
+    );
 }

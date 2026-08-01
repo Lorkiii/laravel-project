@@ -43,3 +43,7 @@ export function reportsUrl(): string {
 export function usersUrl(): string {
     return namedOrPath('users.index', '/users');
 }
+
+export function settingsAccountUrl(): string {
+    return namedOrPath('settings.account', '/settings/account');
+}
