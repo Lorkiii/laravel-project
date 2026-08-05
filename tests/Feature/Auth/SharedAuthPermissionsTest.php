@@ -31,7 +31,7 @@ class SharedAuthPermissionsTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Dashboard')
+                ->component('Dashboard/Dashboard')
                 ->where('auth.user.roles', ['Administrator'])
                 ->has('auth.user.permissions')
                 ->where('auth.user.permissions', fn ($permissions) => collect($permissions)->contains('products.view')
@@ -54,7 +54,7 @@ class SharedAuthPermissionsTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Dashboard')
+                ->component('Dashboard/Dashboard')
                 ->where('auth.user.roles', ['Manager'])
                 ->where('auth.user.permissions', fn ($permissions) => collect($permissions)->contains('products.view')
                     && collect($permissions)->contains('categories.view')
@@ -77,7 +77,7 @@ class SharedAuthPermissionsTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Dashboard')
+                ->component('Dashboard/Dashboard')
                 ->where('auth.user.roles', ['Warehouse Staff'])
                 ->where('auth.user.permissions', fn ($permissions) => collect($permissions)->contains('products.view')
                     && collect($permissions)->contains('inventory.view')
@@ -97,7 +97,7 @@ class SharedAuthPermissionsTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Dashboard')
+                ->component('Dashboard/Dashboard')
                 ->where('auth.user.roles', [])
                 ->where('auth.user.permissions', [])
             );
