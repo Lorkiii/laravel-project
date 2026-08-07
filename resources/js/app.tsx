@@ -4,22 +4,13 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME ?? 'Inventory Management System';
+import { resolvePage } from '@/lib/inertia/pages';
 
-const pages = import.meta.glob('./Pages/**/*.tsx');
+const appName = import.meta.env.VITE_APP_NAME ?? 'Inventory Management System';
 
 createInertiaApp({
     title: (title) => (title ? `${title} — ${appName}` : appName),
-    resolve: async (name) => {
-        const page = pages[`./Pages/${name}.tsx`];
-
-        if (!page) {
-            throw new Error(`Inertia page not found: ${name}`);
-        }
-
-        const module = (await page()) as { default: React.ComponentType };
-        return module.default;
-    },
+    resolve: resolvePage,
     setup({ el, App, props }) {
         if (!el) {
             return;

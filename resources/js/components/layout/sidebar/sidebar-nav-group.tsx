@@ -74,6 +74,7 @@ export function SidebarNavGroup({
                                 key={child.id}
                                 label={child.label}
                                 href={child.href}
+                                pageName={child.pageName ?? ''}
                                 icon={child.icon}
                                 active={isSidebarPathActive(pathname, child.href)}
                                 nested

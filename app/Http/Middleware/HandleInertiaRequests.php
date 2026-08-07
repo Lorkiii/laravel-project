@@ -37,6 +37,10 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        if ($user) {
+            $user->loadMissing(['roles.permissions', 'permissions']);
+        }
+
         return [
             ...parent::share($request),
             'app' => [

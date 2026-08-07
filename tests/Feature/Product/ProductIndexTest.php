@@ -38,4 +38,36 @@ class ProductIndexTest extends TestCase
                 ->component('Product/Index')
             );
     }
+
+    public function test_view_only_user_cannot_access_product_create(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $user->assignRole('Warehouse Staff');
+
+        $this->actingAs($user)
+            ->get(route('products.index'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('products.create'))
+            ->assertForbidden();
+    }
+
+    public function test_authenticated_user_without_product_permission_cannot_access_products(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('products.index'))
+            ->assertForbidden();
+    }
+
+    public function test_guests_are_redirected_from_product_create(): void
+    {
+        $this->get(route('products.create'))->assertRedirect(route('login'));
+    }
 }

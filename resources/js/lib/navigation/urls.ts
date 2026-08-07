@@ -24,6 +24,10 @@ export function productsUrl(): string {
     return namedOrPath('products.index', '/products');
 }
 
+export function productCreateUrl(): string {
+    return namedOrPath('products.create', '/products/create');
+}
+
 export function categoriesUrl(): string {
     return namedOrPath('categories.index', '/categories');
 }

@@ -32,6 +32,7 @@ export function SidebarNav({ items, pathname, onNavigate }: SidebarNavProps) {
                         key={item.id}
                         label={item.label}
                         href={item.href}
+                        pageName={item.pageName ?? ''}
                         icon={item.icon}
                         active={isSidebarPathActive(pathname, item.href)}
                         onNavigate={onNavigate}

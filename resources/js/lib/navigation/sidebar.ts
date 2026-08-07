@@ -31,6 +31,7 @@ export type SidebarItem = {
     label: string;
     icon: LucideIcon;
     href?: string;
+    pageName?: string;
     permission?: string;
     children?: SidebarItem[];
 };
@@ -42,6 +43,7 @@ export function getSidebarNav(): SidebarItem[] {
             label: 'Dashboard',
             icon: LayoutDashboard,
             href: dashboardUrl(),
+            pageName: 'Dashboard/Dashboard',
         },
         {
             id: 'catalog',
@@ -53,6 +55,7 @@ export function getSidebarNav(): SidebarItem[] {
                     label: 'Products',
                     icon: Boxes,
                     href: productsUrl(),
+                    pageName: 'Product/Index',
                     permission: 'products.view',
                 },
                 {

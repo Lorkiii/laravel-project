@@ -1,6 +1,6 @@
-import { Link } from '@inertiajs/react';
 import { ChevronDown, UserCog } from 'lucide-react';
 
+import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,8 +54,9 @@ export function UserMenu() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                    <Link
+                    <PrefetchedLink
                         href={settingsAccountUrl()}
+                        pageName="Settings/Account"
                         className="flex cursor-pointer items-start gap-2"
                     >
                         <UserCog className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -71,7 +72,7 @@ export function UserMenu() {
                                 </div>
                             ) : null}
                         </div>
-                    </Link>
+                    </PrefetchedLink>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

@@ -1,11 +1,12 @@
-import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 
+import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { cn } from '@/lib/utils';
 
 type SidebarNavItemProps = {
     label: string;
     href: string;
+    pageName: string;
     icon: LucideIcon;
     active?: boolean;
     nested?: boolean;
@@ -15,14 +16,16 @@ type SidebarNavItemProps = {
 export function SidebarNavItem({
     label,
     href,
+    pageName,
     icon: Icon,
     active = false,
     nested = false,
     onNavigate,
 }: SidebarNavItemProps) {
     return (
-        <Link
+        <PrefetchedLink
             href={href}
+            pageName={pageName}
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
@@ -41,6 +44,6 @@ export function SidebarNavItem({
                 aria-hidden="true"
             />
             <span className="truncate">{label}</span>
-        </Link>
+        </PrefetchedLink>
     );
 }
