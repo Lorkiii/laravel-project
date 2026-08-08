@@ -32,6 +32,10 @@ export function categoriesUrl(): string {
     return namedOrPath('categories.index', '/categories');
 }
 
+export function categoryCreateUrl(): string {
+    return namedOrPath('categories.create', '/categories/create');
+}
+
 export function suppliersUrl(): string {
     return namedOrPath('suppliers.index', '/suppliers');
 }

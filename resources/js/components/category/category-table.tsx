@@ -1,0 +1,112 @@
+import { FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { EmptyState } from '@/components/ui/empty-state';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import type { Category } from '@/types/category';
+
+type CategoryTableProps = {
+    categories: Category[];
+    onResetFilters: () => void;
+};
+
+export function CategoryTable({ categories, onResetFilters }: CategoryTableProps) {
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                    <TableHead>Code</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {categories.length ? categories.map((category) => (
+                    <TableRow key={category.id}>
+                        <TableCell className="whitespace-nowrap font-mono text-xs text-slate-500">
+                            {category.code}
+                        </TableCell>
+                        <TableCell className="min-w-48 font-medium text-slate-900">
+                            {category.name}
+                        </TableCell>
+                        <TableCell className="max-w-72 truncate text-slate-500">
+                            {category.description || '—'}
+                        </TableCell>
+                        <TableCell>
+                            <Badge
+                                className={
+                                    category.status === 'active'
+                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50'
+                                        : 'border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-100'
+                                }
+                            >
+                                <span
+                                    className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                                        category.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'
+                                    }`}
+                                />
+                                {category.status === 'active' ? 'Active' : 'Inactive'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500">
+                                        <MoreHorizontal aria-hidden="true" />
+                                        <span className="sr-only">Actions for {category.name}</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                    <DropdownMenuLabel>Category actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                        <Pencil aria-hidden="true" />
+                                        Edit category
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive">
+                                        <Trash2 aria-hidden="true" />
+                                        Delete category
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                )) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="h-32">
+                            <EmptyState
+                                title="No categories match your filters"
+                                description="Try clearing filters or changing your search to see categories."
+                                icon={<FolderTree aria-hidden="true" className="h-5 w-5" />}
+                                action={(
+                                    <Button type="button" variant="outline" onClick={onResetFilters}>
+                                        Clear filters
+                                    </Button>
+                                )}
+                                className="py-8"
+                            />
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
+    );
+}

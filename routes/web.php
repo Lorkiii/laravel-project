@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Settings\AccountController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,6 +28,13 @@ Route::middleware('auth')->group(function () {
         ->name('products.create');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
+    Route::get('/categories', [CategoryController::class, 'index'])
+        ->middleware('permission:categories.view')
+        ->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])
+        ->middleware('permission:categories.create')
+        ->name('categories.create');
+        
     Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');
     Route::put('/settings/account/password', [AccountController::class, 'updatePassword'])->name('settings.account.password');

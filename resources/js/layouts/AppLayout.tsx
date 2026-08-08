@@ -3,6 +3,7 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { AppHeader } from '@/components/layout/app-header';
+import { PageLoadingState } from '@/components/layout/page-loading-overlay';
 import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import { useSidebarNav } from '@/hooks/use-sidebar-nav';
 import { cn } from '@/lib/utils';
@@ -98,8 +99,10 @@ export function AppLayout({
                     </div>
 
                     <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-                        {actions ? <div className="mb-6 flex justify-end">{actions}</div> : null}
-                        {children}
+                        <PageLoadingState>
+                            {actions ? <div className="mb-6 flex justify-end">{actions}</div> : null}
+                            {children}
+                        </PageLoadingState>
                     </main>
                 </div>
             </div>

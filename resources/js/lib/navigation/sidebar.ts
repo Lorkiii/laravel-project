@@ -63,6 +63,7 @@ export function getSidebarNav(): SidebarItem[] {
                     label: 'Categories',
                     icon: FolderTree,
                     href: categoriesUrl(),
+                    pageName: 'Category/Index',
                     permission: 'categories.view',
                 },
                 {

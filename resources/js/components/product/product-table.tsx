@@ -1,5 +1,6 @@
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Package, Pencil, Trash2 } from 'lucide-react';
 
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,7 @@ import type { Product } from '@/types/product';
 
 type ProductTableProps = {
     products: Product[];
+    onResetFilters: () => void;
 };
 
 function StockBadge({ product }: { product: Product }) {
@@ -36,7 +38,7 @@ function StockBadge({ product }: { product: Product }) {
     return <span className="font-medium text-slate-700">{product.quantity}</span>;
 }
 
-export function ProductTable({ products }: ProductTableProps) {
+export function ProductTable({ products, onResetFilters }: ProductTableProps) {
     return (
         <Table>
             <TableHeader>
@@ -45,6 +47,7 @@ export function ProductTable({ products }: ProductTableProps) {
                     <TableHead>Product name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Brand</TableHead>
+                    <TableHead>Model</TableHead>
                     <TableHead className="text-right">Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
@@ -61,6 +64,7 @@ export function ProductTable({ products }: ProductTableProps) {
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-slate-600">{product.category}</TableCell>
                         <TableCell className="whitespace-nowrap text-slate-600">{product.brand}</TableCell>
+                        <TableCell className="whitespace-nowrap text-slate-600">{product.model}</TableCell>
                         <TableCell className="whitespace-nowrap text-right font-medium text-slate-700">
                             ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </TableCell>
@@ -90,7 +94,19 @@ export function ProductTable({ products }: ProductTableProps) {
                     </TableRow>
                 )) : (
                     <TableRow>
-                        <TableCell colSpan={8} className="h-32 text-center text-slate-500">No products match your filters.</TableCell>
+                        <TableCell colSpan={9} className="h-32">
+                            <EmptyState
+                                title="No products match your filters"
+                                description="Try clearing filters or changing your search to see products."
+                                icon={<Package aria-hidden="true" className="h-5 w-5" />}
+                                action={(
+                                    <Button type="button" variant="outline" onClick={onResetFilters}>
+                                        Clear filters
+                                    </Button>
+                                )}
+                                className="py-8"
+                            />
+                        </TableCell>
                     </TableRow>
                 )}
             </TableBody>

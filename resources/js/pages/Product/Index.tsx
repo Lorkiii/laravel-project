@@ -1,15 +1,18 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { PackagePlus } from 'lucide-react';
+import { Package, PackagePlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/page-header';
 import { PrefetchedLink } from '@/components/navigation/prefetched-link';
-import { ProductPagination } from '@/components/product/product-pagination';
 import { ProductTable } from '@/components/product/product-table';
 import { ProductsToolbar } from '@/components/product/products-toolbar';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/AppLayout';
-import { productCategories, productFixtures } from '@/lib/product/fixtures';
 import { productCreateUrl } from '@/lib/navigation/urls';
+import type { Product } from '@/types/product';
+
+const products: Product[] = [];
 
 export default function ProductIndex() {
     const [search, setSearch] = useState('');
@@ -21,14 +24,14 @@ export default function ProductIndex() {
 
     const filteredProducts = useMemo(() => {
         const query = search.trim().toLowerCase();
-        const products = productFixtures.filter((product) => {
+        const filtered = products.filter((product) => {
             const matchesSearch = query === '' || product.name.toLowerCase().includes(query) || product.sku.toLowerCase().includes(query);
             const matchesCategory = category === 'all' || product.category === category;
             const matchesStatus = status === 'all' || product.status === status;
             return matchesSearch && matchesCategory && matchesStatus;
         });
 
-        return products.toSorted((left, right) => {
+        return filtered.sort((left, right) => {
             if (sort === 'name-desc') return right.name.localeCompare(left.name);
             if (sort === 'price-low') return left.price - right.price;
             if (sort === 'price-high') return right.price - left.price;
@@ -39,6 +42,8 @@ export default function ProductIndex() {
 
     const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
     const visibleProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize);
+    const isCatalogEmpty = products.length === 0;
+    const categories = [...new Set(products.map((product) => product.category))].sort();
 
     const resetFilters = () => {
         setSearch('');
@@ -53,39 +58,57 @@ export default function ProductIndex() {
         setPage(1);
     };
 
+    const addProductAction = (
+        <Button asChild>
+            <PrefetchedLink href={productCreateUrl()} pageName="Product/Create">
+                <PackagePlus aria-hidden="true" />
+                Add product
+            </PrefetchedLink>
+        </Button>
+    );
+
     return (
         <div className="mx-auto w-full max-w-[1600px]">
             <PageHeader
                 title="Products"
                 description="Manage your product catalog and keep stock levels under control."
-                actions={
-                    <Button asChild>
-                        <PrefetchedLink href={productCreateUrl()} pageName="Product/Create"><PackagePlus aria-hidden="true" />Add product</PrefetchedLink>
-                    </Button>
-                }
+                actions={addProductAction}
             />
 
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <ProductsToolbar
-                    search={search}
-                    category={category}
-                    status={status}
-                    sort={sort}
-                    categories={productCategories}
-                    onSearchChange={updateFilter(setSearch)}
-                    onCategoryChange={updateFilter(setCategory)}
-                    onStatusChange={updateFilter(setStatus)}
-                    onSortChange={updateFilter(setSort)}
-                    onReset={resetFilters}
-                />
-                <ProductTable products={visibleProducts} />
-                <ProductPagination
-                    currentPage={Math.min(page, totalPages)}
-                    totalPages={totalPages}
-                    totalItems={filteredProducts.length}
-                    pageSize={pageSize}
-                    onPageChange={setPage}
-                />
+                {isCatalogEmpty ? (
+                    <EmptyState
+                        title="No products yet"
+                        description="Add your first product to start building your catalog and tracking stock."
+                        icon={<Package aria-hidden="true" className="h-5 w-5" />}
+                        action={addProductAction}
+                        className="py-16"
+                    />
+                ) : (
+                    <>
+                        <ProductsToolbar
+                            search={search}
+                            category={category}
+                            status={status}
+                            sort={sort}
+                            categories={categories}
+                            onSearchChange={updateFilter(setSearch)}
+                            onCategoryChange={updateFilter(setCategory)}
+                            onStatusChange={updateFilter(setStatus)}
+                            onSortChange={updateFilter(setSort)}
+                            onReset={resetFilters}
+                        />
+                        <ProductTable products={visibleProducts} onResetFilters={resetFilters} />
+                        <Pagination
+                            currentPage={Math.min(page, totalPages)}
+                            totalPages={totalPages}
+                            totalItems={filteredProducts.length}
+                            pageSize={pageSize}
+                            onPageChange={setPage}
+                            itemLabel="products"
+                        />
+                    </>
+                )}
             </div>
         </div>
     );
