@@ -14,6 +14,13 @@ declare global {
 
 declare module '@inertiajs/core' {
     interface InertiaConfig {
+        flashDataType: {
+            successModal?: {
+                title: string;
+                description: string;
+                actionLabel?: string;
+            };
+        };
         sharedPageProps: {
             app: {
                 name: string;

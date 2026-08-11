@@ -8,7 +8,11 @@ import { ProductForm } from '@/components/product/product-form';
 import { AppLayout } from '@/layouts/AppLayout';
 import { productsUrl } from '@/lib/navigation/urls';
 
-export default function ProductCreate() {
+type ProductCreateProps = {
+    categories: { value: string; label: string; code: string }[];
+};
+
+export default function ProductCreate({ categories }: ProductCreateProps) {
     return (
         <div className="mx-auto w-full max-w-5xl">
             <PageHeader
@@ -16,11 +20,14 @@ export default function ProductCreate() {
                 description="Create a new product record for your inventory."
                 actions={
                     <Button variant="outline" asChild>
-                        <PrefetchedLink href={productsUrl()} pageName="Product/Index"><ArrowLeft aria-hidden="true" />Back to products</PrefetchedLink>
+                        <PrefetchedLink href={productsUrl()} pageName="Product/Index">
+                            <ArrowLeft aria-hidden="true" />
+                            Back to products
+                        </PrefetchedLink>
                     </Button>
                 }
             />
-            <ProductForm />
+            <ProductForm categories={categories} />
         </div>
     );
 }

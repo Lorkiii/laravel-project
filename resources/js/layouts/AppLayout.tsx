@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/layout/app-header';
 import { PageLoadingState } from '@/components/layout/page-loading-overlay';
 import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
+import { SuccessModal } from '@/components/ui/success-modal';
 import { useSidebarNav } from '@/hooks/use-sidebar-nav';
 import { cn } from '@/lib/utils';
+import type { SuccessModalPayload } from '@/types/inertia';
 
 type AppLayoutProps = PropsWithChildren<{
     title?: string;
@@ -20,14 +22,28 @@ export function AppLayout({
     headerTitle = 'Dashboard',
     actions,
 }: AppLayoutProps) {
-    const { url } = usePage();
+    const page = usePage();
+    const { url } = page;
     const pathname = url.split('?')[0] || '/';
     const items = useSidebarNav();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [successModalOpen, setSuccessModalOpen] = useState(false);
+    const [successModal, setSuccessModal] = useState<SuccessModalPayload | null>(null);
 
     useEffect(() => {
         setMobileOpen(false);
     }, [pathname]);
+
+    useEffect(() => {
+        const payload = page.flash.successModal;
+
+        if (!payload) {
+            return;
+        }
+
+        setSuccessModal(payload);
+        setSuccessModalOpen(true);
+    }, [page.flash.successModal]);
 
     useEffect(() => {
         if (!mobileOpen) {
@@ -106,6 +122,14 @@ export function AppLayout({
                     </main>
                 </div>
             </div>
+
+            <SuccessModal
+                open={successModalOpen}
+                onOpenChange={setSuccessModalOpen}
+                title={successModal?.title ?? ''}
+                description={successModal?.description ?? ''}
+                actionLabel={successModal?.actionLabel}
+            />
         </>
     );
 }

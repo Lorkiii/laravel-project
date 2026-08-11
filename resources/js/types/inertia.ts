@@ -9,6 +9,12 @@ export type SharedAuthUser = {
     permissions: string[];
 };
 
+export type SuccessModalPayload = {
+    title: string;
+    description: string;
+    actionLabel?: string;
+};
+
 export type SharedPageProps = {
     app: {
         name: string;

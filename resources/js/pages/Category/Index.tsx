@@ -12,9 +12,11 @@ import { AppLayout } from '@/layouts/AppLayout';
 import { categoryCreateUrl } from '@/lib/navigation/urls';
 import type { Category } from '@/types/category';
 
-const categories: Category[] = [];
+type CategoryIndexProps = {
+    categories: Category[];
+};
 
-export default function CategoryIndex() {
+export default function CategoryIndex({ categories }: CategoryIndexProps) {
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('all');
     const [sort, setSort] = useState('name-asc');
@@ -38,7 +40,7 @@ export default function CategoryIndex() {
             if (sort === 'code-desc') return right.code.localeCompare(left.code);
             return left.name.localeCompare(right.name);
         });
-    }, [search, sort, status]);
+    }, [categories, search, sort, status]);
 
     const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
     const visibleCategories = filteredCategories.slice((page - 1) * pageSize, page * pageSize);

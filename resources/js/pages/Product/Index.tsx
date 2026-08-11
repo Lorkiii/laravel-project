@@ -1,62 +1,78 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { Package, PackagePlus } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from "react";
+import { Package, PackagePlus } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/page-header';
-import { PrefetchedLink } from '@/components/navigation/prefetched-link';
-import { ProductTable } from '@/components/product/product-table';
-import { ProductsToolbar } from '@/components/product/products-toolbar';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Pagination } from '@/components/ui/pagination';
-import { AppLayout } from '@/layouts/AppLayout';
-import { productCreateUrl } from '@/lib/navigation/urls';
-import type { Product } from '@/types/product';
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
+import { PrefetchedLink } from "@/components/navigation/prefetched-link";
+import { ProductTable } from "@/components/product/product-table";
+import { ProductsToolbar } from "@/components/product/products-toolbar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { AppLayout } from "@/layouts/AppLayout";
+import { productCreateUrl } from "@/lib/navigation/urls";
+import type { Product } from "@/types/product";
 
-const products: Product[] = [];
+type ProductIndexProps = {
+    products: Product[];
+};
 
-export default function ProductIndex() {
-    const [search, setSearch] = useState('');
-    const [category, setCategory] = useState('all');
-    const [status, setStatus] = useState('all');
-    const [sort, setSort] = useState('name-asc');
+export default function ProductIndex({ products }: ProductIndexProps) {
+    const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("all");
+    const [status, setStatus] = useState("all");
+    const [sort, setSort] = useState("name-asc");
     const [page, setPage] = useState(1);
     const pageSize = 10;
 
     const filteredProducts = useMemo(() => {
         const query = search.trim().toLowerCase();
         const filtered = products.filter((product) => {
-            const matchesSearch = query === '' || product.name.toLowerCase().includes(query) || product.sku.toLowerCase().includes(query);
-            const matchesCategory = category === 'all' || product.category === category;
-            const matchesStatus = status === 'all' || product.status === status;
+            const matchesSearch =
+                query === "" ||
+                product.name.toLowerCase().includes(query) ||
+                product.sku.toLowerCase().includes(query);
+            const matchesCategory =
+                category === "all" || product.category === category;
+            const matchesStatus = status === "all" || product.status === status;
             return matchesSearch && matchesCategory && matchesStatus;
         });
 
         return filtered.sort((left, right) => {
-            if (sort === 'name-desc') return right.name.localeCompare(left.name);
-            if (sort === 'price-low') return left.price - right.price;
-            if (sort === 'price-high') return right.price - left.price;
-            if (sort === 'stock-low') return left.quantity - right.quantity;
+            if (sort === "name-desc")
+                return right.name.localeCompare(left.name);
+            if (sort === "price-low") return left.price - right.price;
+            if (sort === "price-high") return right.price - left.price;
+            if (sort === "stock-low") return left.quantity - right.quantity;
             return left.name.localeCompare(right.name);
         });
     }, [category, search, sort, status]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-    const visibleProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize);
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredProducts.length / pageSize),
+    );
+    const visibleProducts = filteredProducts.slice(
+        (page - 1) * pageSize,
+        page * pageSize,
+    );
     const isCatalogEmpty = products.length === 0;
-    const categories = [...new Set(products.map((product) => product.category))].sort();
+    const categories = [
+        ...new Set(products.map((product) => product.category)),
+    ].sort();
 
     const resetFilters = () => {
-        setSearch('');
-        setCategory('all');
-        setStatus('all');
-        setSort('name-asc');
+        setSearch("");
+        setCategory("all");
+        setStatus("all");
+        setSort("name-asc");
         setPage(1);
     };
 
-    const updateFilter = (setter: (value: string) => void) => (value: string) => {
-        setter(value);
-        setPage(1);
-    };
+    const updateFilter =
+        (setter: (value: string) => void) => (value: string) => {
+            setter(value);
+            setPage(1);
+        };
 
     const addProductAction = (
         <Button asChild>
@@ -80,7 +96,9 @@ export default function ProductIndex() {
                     <EmptyState
                         title="No products yet"
                         description="Add your first product to start building your catalog and tracking stock."
-                        icon={<Package aria-hidden="true" className="h-5 w-5" />}
+                        icon={
+                            <Package aria-hidden="true" className="h-5 w-5" />
+                        }
                         action={addProductAction}
                         className="py-16"
                     />
@@ -98,7 +116,10 @@ export default function ProductIndex() {
                             onSortChange={updateFilter(setSort)}
                             onReset={resetFilters}
                         />
-                        <ProductTable products={visibleProducts} onResetFilters={resetFilters} />
+                        <ProductTable
+                            products={visibleProducts}
+                            onResetFilters={resetFilters}
+                        />
                         <Pagination
                             currentPage={Math.min(page, totalPages)}
                             totalPages={totalPages}

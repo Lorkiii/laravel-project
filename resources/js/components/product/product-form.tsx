@@ -21,18 +21,31 @@ import type { ProductFormValues } from "@/types/product";
 
 const initialValues: ProductFormValues = {
     name: "",
-    sku: "",
     brand: "",
     model: "",
-    category: "",
+    category_id: "",
     description: "",
-    price: 0,
-    quantity: 0,
-    minimum_stock: 0,
+    price: "",
+    quantity: "",
+    minimum_stock: "",
     status: true,
 };
 
-export function ProductForm() {
+type ProductFormProps = {
+    categories: { value: string; label: string; code: string }[];
+};
+
+function previewSku(categoryCode: string, brand: string, model: string): string {
+    const parts = [categoryCode, brand, model]
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => part.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
+        .filter(Boolean);
+
+    return parts.length > 0 ? parts.join("-") : "Auto-generated";
+}
+
+export function ProductForm({ categories }: ProductFormProps) {
     const { data, setData, post, processing, errors } =
         useForm<ProductFormValues>(initialValues);
 
@@ -42,6 +55,15 @@ export function ProductForm() {
     ) => {
         setData(field, value);
     };
+
+    const selectedCategoryCode =
+        categories.find((category) => category.value === data.category_id)
+            ?.code ?? "";
+    const skuPreview = previewSku(
+        selectedCategoryCode,
+        data.brand,
+        data.model,
+    );
 
     return (
         <Card>
@@ -62,32 +84,36 @@ export function ProductForm() {
                         <div className="grid gap-5 sm:grid-cols-2">
                             <Field
                                 label="SKU"
-                                required
-                                hint="Must be unique"
-                                error={errors.sku}
+                                hint="Auto-generated from category code, brand, and model"
+                                error={errors.name}
                             >
                                 <Input
-                                    value={data.sku}
-                                    onChange={(event) =>
-                                        update("sku", event.target.value)
-                                    }
-                                    placeholder="e.g. ACC-WK-001"
+                                    value={skuPreview}
+                                    disabled
+                                    readOnly
+                                    placeholder="Auto-generated"
                                 />
                             </Field>
                             <Field
                                 label="Category"
                                 required
-                                error={errors.category}
+                                error={errors.category_id}
                             >
                                 <Select
-                                    value={data.category}
+                                    value={data.category_id}
                                     onChange={(event) =>
-                                        update("category", event.target.value)
+                                        update("category_id", event.target.value)
                                     }
                                 >
-                                    <option text-style="bold" value="">
-                                        Select a category
-                                    </option>
+                                    <option value="">Select a category</option>
+                                    {categories.map((category) => (
+                                        <option
+                                            key={category.value}
+                                            value={category.value}
+                                        >
+                                            {category.label}
+                                        </option>
+                                    ))}
                                 </Select>
                             </Field>
                             <Field

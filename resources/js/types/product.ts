@@ -17,13 +17,12 @@ export type Product = {
 
 export type ProductFormValues = {
     name: string;
-    sku: string;
     brand: string;
     model: string;
-    category: string;
+    category_id: string;
     description: string;
-    price: number;
-    quantity: number;
-    minimum_stock: number;
+    price: number | string;
+    quantity: number | string;
+    minimum_stock: number | string;
     status: boolean;
 };
