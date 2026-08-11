@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('categories', function (Blueprint $table) {
             //
-            $table->string('code')->unique()->after('name');
+            $table->string('code', 6)->unique()->after('name');
         });
     }
 

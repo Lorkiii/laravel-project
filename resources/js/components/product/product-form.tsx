@@ -1,5 +1,5 @@
 import { ArrowLeft, Save } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useForm } from "@inertiajs/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PrefetchedLink } from "@/components/navigation/prefetched-link";
 import { Select } from "@/components/ui/select";
@@ -32,13 +33,14 @@ const initialValues: ProductFormValues = {
 };
 
 export function ProductForm() {
-    const [values, setValues] = useState<ProductFormValues>(initialValues);
+    const { data, setData, post, processing, errors } =
+        useForm<ProductFormValues>(initialValues);
 
     const update = (
         field: keyof ProductFormValues,
         value: string | boolean,
     ) => {
-        setValues((current) => ({ ...current, [field]: value }));
+        setData(field, value);
     };
 
     return (
@@ -49,37 +51,52 @@ export function ProductForm() {
                     Add the core details and stock thresholds for this product.
                 </CardDescription>
             </CardHeader>
-            <form onSubmit={(event) => event.preventDefault()}>
+            <form
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    post(productsUrl());
+                }}
+            >
                 <CardContent className="space-y-8 p-4 sm:p-6">
                     <section className="space-y-4">
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="SKU" required hint="Must be unique">
+                            <Field
+                                label="SKU"
+                                required
+                                hint="Must be unique"
+                                error={errors.sku}
+                            >
                                 <Input
-                                    value={values.sku}
+                                    value={data.sku}
                                     onChange={(event) =>
                                         update("sku", event.target.value)
                                     }
                                     placeholder="e.g. ACC-WK-001"
                                 />
                             </Field>
-                            <Field label="Category" required>
+                            <Field
+                                label="Category"
+                                required
+                                error={errors.category}
+                            >
                                 <Select
-                                    value={values.category}
+                                    value={data.category}
                                     onChange={(event) =>
                                         update("category", event.target.value)
                                     }
                                 >
-                                    <option text-style="bold" value="">Select a category</option>
-                                    {['Accessories', 'Audio', 'Displays', 'Furniture', 'Office Equipment', 'Storage', 'Video'].sort().map((category: string) => ( 
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
+                                    <option text-style="bold" value="">
+                                        Select a category
+                                    </option>
                                 </Select>
                             </Field>
-                            <Field label="Product name" required>
+                            <Field
+                                label="Product name"
+                                required
+                                error={errors.name}
+                            >
                                 <Input
-                                    value={values.name}
+                                    value={data.name}
                                     onChange={(event) =>
                                         update("name", event.target.value)
                                     }
@@ -87,18 +104,18 @@ export function ProductForm() {
                                 />
                             </Field>
 
-                            <Field label="Brand">
+                            <Field label="Brand" error={errors.brand}>
                                 <Input
-                                    value={values.brand}
+                                    value={data.brand}
                                     onChange={(event) =>
                                         update("brand", event.target.value)
                                     }
                                     placeholder="e.g. Logitech"
                                 />
                             </Field>
-                            <Field label="Model">
+                            <Field label="Model" error={errors.model}>
                                 <Input
-                                    value={values.model}
+                                    value={data.model}
                                     onChange={(event) =>
                                         update("model", event.target.value)
                                     }
@@ -108,9 +125,10 @@ export function ProductForm() {
                             <Field
                                 label="Description"
                                 className="sm:col-span-2"
+                                error={errors.description}
                             >
                                 <Textarea
-                                    value={values.description}
+                                    value={data.description}
                                     onChange={(event) =>
                                         update(
                                             "description",
@@ -134,24 +152,28 @@ export function ProductForm() {
                             </p>
                         </div>
                         <div className="grid gap-5 sm:grid-cols-3">
-                            <Field label="Price" required>
+                            <Field label="Price" required error={errors.price}>
                                 <Input
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    value={values.price}
+                                    value={data.price}
                                     onChange={(event) =>
                                         update("price", event.target.value)
                                     }
                                     placeholder="0.00"
                                 />
                             </Field>
-                            <Field label="Quantity" required>
+                            <Field
+                                label="Quantity"
+                                required
+                                error={errors.quantity}
+                            >
                                 <Input
                                     type="number"
                                     min="0"
                                     step="1"
-                                    value={values.quantity}
+                                    value={data.quantity}
                                     onChange={(event) =>
                                         update("quantity", event.target.value)
                                     }
@@ -162,12 +184,13 @@ export function ProductForm() {
                                 label="Minimum stock"
                                 required
                                 hint="Low-stock alert threshold"
+                                error={errors.minimum_stock}
                             >
                                 <Input
                                     type="number"
                                     min="0"
                                     step="1"
-                                    value={values.minimum_stock}
+                                    value={data.minimum_stock}
                                     onChange={(event) =>
                                         update(
                                             "minimum_stock",
@@ -184,7 +207,7 @@ export function ProductForm() {
                         <input
                             id="product-status"
                             type="checkbox"
-                            checked={values.status}
+                            checked={data.status}
                             onChange={(event) =>
                                 update("status", event.target.checked)
                             }
@@ -214,41 +237,12 @@ export function ProductForm() {
                             Cancel
                         </PrefetchedLink>
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" disabled={processing}>
                         <Save aria-hidden="true" />
                         Save product
                     </Button>
                 </CardFooter>
             </form>
         </Card>
-    );
-}
-
-function Field({
-    label,
-    required,
-    hint,
-    className,
-    children,
-}: {
-    label: string;
-    required?: boolean;
-    hint?: string;
-    className?: string;
-    children: ReactNode;
-}) {
-    return (
-        <div className={className}>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-                {label}
-                {required ? <span className="ml-1 text-red-500">*</span> : null}
-                {hint ? (
-                    <span className="ml-2 text-xs font-normal text-slate-400">
-                        {hint}
-                    </span>
-                ) : null}
-            </label>
-            {children}
-        </div>
     );
 }
