@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+    ArrowLeftRight,
     Boxes,
     ClipboardList,
     FolderTree,
@@ -22,6 +23,7 @@ import {
     inventoryUrl,
     productsUrl,
     reportsUrl,
+    stockMovementsUrl,
     suppliersUrl,
     usersUrl,
 } from '@/lib/navigation/urls';
@@ -82,6 +84,14 @@ export function getSidebarNav(): SidebarItem[] {
             href: inventoryUrl(),
             pageName: 'Inventory/Index',
             permission: 'inventory.view',
+        },
+        {
+            id: 'stock-movements',
+            label: 'Stock Movements',
+            icon: ArrowLeftRight,
+            href: stockMovementsUrl(),
+            pageName: 'StockMovements/Index',
+            permission: 'inventory.view_movements',
         },
         {
             id: 'reports',

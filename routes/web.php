@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\InventoryController;
+use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Settings\AccountController;
 use Illuminate\Support\Facades\Route;
@@ -61,9 +62,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])
         ->middleware('permission:inventory.view')
         ->name('inventory.index');
-    Route::post('/inventory/stock-out', [InventoryController::class, 'storeStockOut'])
+
+    Route::get('/stock-movements', [StockMovementController::class, 'index'])
+        ->middleware('permission:inventory.view_movements')
+        ->name('stock-movements.index');
+    Route::get('/stock-movements/stock-in', [StockMovementController::class, 'createStockIn'])
+        ->middleware('permission:inventory.stock_in')
+        ->name('stock-movements.stock-in.create');
+    Route::post('/stock-movements/stock-in', [StockMovementController::class, 'storeStockIn'])
+        ->middleware('permission:inventory.stock_in')
+        ->name('stock-movements.stock-in.store');
+    Route::get('/stock-movements/stock-out', [StockMovementController::class, 'createStockOut'])
         ->middleware('permission:inventory.stock_out')
-        ->name('inventory.stock-out.store');
+        ->name('stock-movements.stock-out.create');
+    Route::post('/stock-movements/stock-out', [StockMovementController::class, 'storeStockOut'])
+        ->middleware('permission:inventory.stock_out')
+        ->name('stock-movements.stock-out.store');
+    Route::get('/stock-movements/adjustment', [StockMovementController::class, 'createAdjustment'])
+        ->middleware('permission:inventory.adjust')
+        ->name('stock-movements.adjustment.create');
+    Route::post('/stock-movements/adjustment', [StockMovementController::class, 'storeAdjustment'])
+        ->middleware('permission:inventory.adjust')
+        ->name('stock-movements.adjustment.store');
 
     Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');

@@ -31,14 +31,14 @@ class StockOutTest extends TestCase
         ]);
 
         $this->actingAs($staff)
-            ->post(route('inventory.stock-out.store'), [
+            ->post(route('stock-movements.stock-out.store'), [
                 'product_id' => $product->id,
                 'quantity' => 4,
                 'reason' => StockMovement::REASON_CUSTOMER_SALE,
                 'reference' => 'SALE-1042',
                 'notes' => 'Collected at the front desk.',
             ])
-            ->assertRedirect(route('inventory.index'));
+            ->assertRedirect(route('stock-movements.index'));
 
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
@@ -61,13 +61,13 @@ class StockOutTest extends TestCase
         $staff = $this->staff();
         $product = Product::factory()->create(['quantity' => 10]);
 
-        $this->actingAs($staff)->post(route('inventory.stock-out.store'), [
+        $this->actingAs($staff)->post(route('stock-movements.stock-out.store'), [
             'product_id' => $product->id,
             'quantity' => 1,
             'reason' => StockMovement::REASON_CUSTOMER_SALE,
         ])->assertRedirect();
 
-        $this->actingAs($staff)->post(route('inventory.stock-out.store'), [
+        $this->actingAs($staff)->post(route('stock-movements.stock-out.store'), [
             'product_id' => $product->id,
             'quantity' => 1,
             'reason' => StockMovement::REASON_INTERNAL_REQUEST,
@@ -90,13 +90,13 @@ class StockOutTest extends TestCase
         $product = Product::factory()->create(['quantity' => 10]);
 
         $this->actingAs($staff)
-            ->from(route('inventory.index'))
-            ->post(route('inventory.stock-out.store'), [
+            ->from(route('stock-movements.stock-out.create'))
+            ->post(route('stock-movements.stock-out.store'), [
                 'product_id' => $product->id,
                 'quantity' => 1,
                 'reason' => StockMovement::REASON_INTERNAL_REQUEST,
             ])
-            ->assertRedirect(route('inventory.index'))
+            ->assertRedirect(route('stock-movements.stock-out.create'))
             ->assertSessionHasErrors('reference');
 
         $this->assertDatabaseCount('stock_movements', 0);
@@ -112,13 +112,13 @@ class StockOutTest extends TestCase
         ]);
 
         $this->actingAs($staff)
-            ->from(route('inventory.index'))
-            ->post(route('inventory.stock-out.store'), [
+            ->from(route('stock-movements.stock-out.create'))
+            ->post(route('stock-movements.stock-out.store'), [
                 'product_id' => $product->id,
                 'quantity' => 1,
                 'reason' => StockMovement::REASON_CUSTOMER_SALE,
             ])
-            ->assertRedirect(route('inventory.index'))
+            ->assertRedirect(route('stock-movements.stock-out.create'))
             ->assertSessionHasErrors('product_id');
 
         $this->assertDatabaseCount('stock_movements', 0);
@@ -139,13 +139,13 @@ class StockOutTest extends TestCase
         ];
 
         $this->actingAs($staff)
-            ->post(route('inventory.stock-out.store'), $payload + ['quantity' => 4])
+            ->post(route('stock-movements.stock-out.store'), $payload + ['quantity' => 4])
             ->assertRedirect();
 
         $this->actingAs($staff)
-            ->from(route('inventory.index'))
-            ->post(route('inventory.stock-out.store'), $payload + ['quantity' => 2])
-            ->assertRedirect(route('inventory.index'))
+            ->from(route('stock-movements.stock-out.create'))
+            ->post(route('stock-movements.stock-out.store'), $payload + ['quantity' => 2])
+            ->assertRedirect(route('stock-movements.stock-out.create'))
             ->assertSessionHasErrors('quantity');
 
         $this->assertSame(1, $product->fresh()->quantity);
@@ -158,8 +158,8 @@ class StockOutTest extends TestCase
         $product = Product::factory()->create(['quantity' => 5]);
 
         $this->actingAs($staff)
-            ->from(route('inventory.index'))
-            ->post(route('inventory.stock-out.store'), [
+            ->from(route('stock-movements.stock-out.create'))
+            ->post(route('stock-movements.stock-out.store'), [
                 'product_id' => $product->id,
                 'quantity' => 0,
                 'reason' => StockMovement::REASON_CUSTOMER_SALE,
@@ -177,7 +177,7 @@ class StockOutTest extends TestCase
         $product = Product::factory()->create(['quantity' => 5]);
 
         $this->actingAs($user)
-            ->post(route('inventory.stock-out.store'), [
+            ->post(route('stock-movements.stock-out.store'), [
                 'product_id' => $product->id,
                 'quantity' => 1,
                 'reason' => StockMovement::REASON_CUSTOMER_SALE,
@@ -188,40 +188,23 @@ class StockOutTest extends TestCase
         $this->assertDatabaseCount('stock_movements', 0);
     }
 
-    public function test_staff_only_sees_their_own_stock_out_movements(): void
+    public function test_staff_can_open_stock_out_form(): void
     {
         $staff = $this->staff();
-        $otherStaff = $this->staff();
-        $product = Product::factory()->create();
-
-        $ownMovement = $this->movement($product, $staff);
-        $this->movement($product, $otherStaff);
+        $product = Product::factory()->create([
+            'quantity' => 4,
+            'status' => true,
+        ]);
 
         $this->actingAs($staff)
-            ->get(route('inventory.index'))
+            ->get(route('stock-movements.stock-out.create', ['product_id' => $product->id]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('movements', 1)
-                ->where('movements.0.id', $ownMovement->id)
-                ->where('movements.0.recorded_by', "{$staff->first_name} {$staff->last_name}")
+                ->component('StockMovements/StockOut')
+                ->where('selectedProductId', $product->id)
+                ->has('products')
+                ->has('reasons', 2)
             );
-    }
-
-    public function test_manager_sees_broader_stock_out_history(): void
-    {
-        $manager = User::factory()->create();
-        $manager->assignRole('Manager');
-        $firstStaff = $this->staff();
-        $secondStaff = $this->staff();
-        $product = Product::factory()->create();
-
-        $this->movement($product, $firstStaff);
-        $this->movement($product, $secondStaff);
-
-        $this->actingAs($manager)
-            ->get(route('inventory.index'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('movements', 2));
     }
 
     public function test_stock_status_still_reflects_quantity_after_stock_out(): void
@@ -234,7 +217,7 @@ class StockOutTest extends TestCase
             'status' => true,
         ]);
 
-        $this->actingAs($staff)->post(route('inventory.stock-out.store'), [
+        $this->actingAs($staff)->post(route('stock-movements.stock-out.store'), [
             'product_id' => $product->id,
             'quantity' => 1,
             'reason' => StockMovement::REASON_CUSTOMER_SALE,
@@ -255,16 +238,5 @@ class StockOutTest extends TestCase
         $staff->assignRole('Warehouse Staff');
 
         return $staff;
-    }
-
-    private function movement(Product $product, User $user): StockMovement
-    {
-        return StockMovement::query()->create([
-            'product_id' => $product->id,
-            'user_id' => $user->id,
-            'quantity' => 1,
-            'type' => StockMovement::TYPE_STOCK_OUT,
-            'reason' => StockMovement::REASON_CUSTOMER_SALE,
-        ]);
     }
 }

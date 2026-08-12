@@ -74,8 +74,76 @@ export function inventoryUrl(): string {
     return namedOrPath('inventory.index', '/inventory');
 }
 
-export function inventoryStockOutUrl(): string {
-    return namedOrPath('inventory.stock-out.store', '/inventory/stock-out');
+export function stockMovementsUrl(type?: string): string {
+    if (type && type !== 'all') {
+        return route().has('stock-movements.index')
+            ? route('stock-movements.index', { type })
+            : `/stock-movements?type=${encodeURIComponent(type)}`;
+    }
+
+    return namedOrPath('stock-movements.index', '/stock-movements');
+}
+
+export function stockInUrl(productId?: number): string {
+    if (productId) {
+        return route().has('stock-movements.stock-in.create')
+            ? route('stock-movements.stock-in.create', { product_id: productId })
+            : `/stock-movements/stock-in?product_id=${productId}`;
+    }
+
+    return namedOrPath(
+        'stock-movements.stock-in.create',
+        '/stock-movements/stock-in',
+    );
+}
+
+export function stockInStoreUrl(): string {
+    return namedOrPath(
+        'stock-movements.stock-in.store',
+        '/stock-movements/stock-in',
+    );
+}
+
+export function stockOutUrl(productId?: number): string {
+    if (productId) {
+        return route().has('stock-movements.stock-out.create')
+            ? route('stock-movements.stock-out.create', { product_id: productId })
+            : `/stock-movements/stock-out?product_id=${productId}`;
+    }
+
+    return namedOrPath(
+        'stock-movements.stock-out.create',
+        '/stock-movements/stock-out',
+    );
+}
+
+export function stockOutStoreUrl(): string {
+    return namedOrPath(
+        'stock-movements.stock-out.store',
+        '/stock-movements/stock-out',
+    );
+}
+
+export function stockAdjustmentUrl(productId?: number): string {
+    if (productId) {
+        return route().has('stock-movements.adjustment.create')
+            ? route('stock-movements.adjustment.create', {
+                  product_id: productId,
+              })
+            : `/stock-movements/adjustment?product_id=${productId}`;
+    }
+
+    return namedOrPath(
+        'stock-movements.adjustment.create',
+        '/stock-movements/adjustment',
+    );
+}
+
+export function stockAdjustmentStoreUrl(): string {
+    return namedOrPath(
+        'stock-movements.adjustment.store',
+        '/stock-movements/adjustment',
+    );
 }
 
 export function reportsUrl(): string {

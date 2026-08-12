@@ -33,6 +33,12 @@ const navTemplate: SidebarFilterItem[] = [
         permission: 'inventory.view',
     },
     {
+        id: 'stock-movements',
+        label: 'Stock Movements',
+        href: '/stock-movements',
+        permission: 'inventory.view_movements',
+    },
+    {
         id: 'reports',
         label: 'Reports',
         href: '/reports',
@@ -67,6 +73,9 @@ const rolePermissions = {
         'suppliers.edit',
         'suppliers.delete',
         'inventory.view',
+        'inventory.view_movements',
+        'inventory.stock_in',
+        'inventory.stock_out',
         'inventory.adjust',
         'reports.view',
         'reports.export',
@@ -80,13 +89,20 @@ const rolePermissions = {
         'products.create',
         'products.edit',
         'categories.view',
-        'categories.create',
-        'categories.edit',
         'inventory.view',
+        'inventory.view_movements',
+        'inventory.stock_in',
+        'inventory.stock_out',
         'inventory.adjust',
         'reports.view',
     ],
-    'Warehouse Staff': ['products.view', 'inventory.view'],
+    'Warehouse Staff': [
+        'products.view',
+        'inventory.view',
+        'inventory.view_movements',
+        'inventory.stock_in',
+        'inventory.stock_out',
+    ],
 } as const;
 
 function summarize(items: SidebarFilterItem[]): string[] {
@@ -113,11 +129,23 @@ const expectations: Record<keyof typeof rolePermissions, string[]> = {
         'dashboard',
         'catalog[products,categories,suppliers]',
         'inventory',
+        'stock-movements',
         'reports',
         'users',
     ],
-    Manager: ['dashboard', 'catalog[products,categories]', 'inventory', 'reports'],
-    'Warehouse Staff': ['dashboard', 'products', 'inventory'],
+    Manager: [
+        'dashboard',
+        'catalog[products,categories]',
+        'inventory',
+        'stock-movements',
+        'reports',
+    ],
+    'Warehouse Staff': [
+        'dashboard',
+        'products',
+        'inventory',
+        'stock-movements',
+    ],
 };
 
 for (const [role, permissions] of Object.entries(rolePermissions)) {

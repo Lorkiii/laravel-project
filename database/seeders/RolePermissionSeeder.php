@@ -28,8 +28,10 @@ class RolePermissionSeeder extends Seeder
             'suppliers.delete',
 
             'inventory.view',
-            'inventory.adjust',
+            'inventory.view_movements',
+            'inventory.stock_in',
             'inventory.stock_out',
+            'inventory.adjust',
 
             'reports.view',
             'reports.export',
@@ -69,8 +71,10 @@ class RolePermissionSeeder extends Seeder
             'categories.view',
 
             'inventory.view',
-            'inventory.adjust',
+            'inventory.view_movements',
+            'inventory.stock_in',
             'inventory.stock_out',
+            'inventory.adjust',
 
             'reports.view',
         ]);
@@ -78,6 +82,8 @@ class RolePermissionSeeder extends Seeder
         $staff->syncPermissions([
             'products.view',
             'inventory.view',
+            'inventory.view_movements',
+            'inventory.stock_in',
             'inventory.stock_out',
         ]);
     }

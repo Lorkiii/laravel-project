@@ -50,6 +50,7 @@ class InventoryIndexTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Inventory/Index')
                 ->has('items', 3)
+                ->missing('movements')
                 ->where('items.0.name', 'Available Product')
                 ->where('items.0.sku', 'TEST-IN')
                 ->where('items.0.quantity', 11)
