@@ -14,15 +14,19 @@ class CategoryController extends Controller
     public function index(): Response
     {
         $categories = Category::query()
+            ->with('creator:id,first_name,last_name,username')
             ->orderBy('name')
-            ->get(['id', 'name', 'code', 'description', 'is_active'])
-            ->map(fn (Category $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'code' => $category->code,
-                'description' => $category->description,
-                'status' => $category->is_active ? 'active' : 'inactive',
-            ]);
+            ->get([
+                'id',
+                'name',
+                'code',
+                'description',
+                'is_active',
+                'created_by',
+                'created_at',
+                'updated_at',
+            ])
+            ->map(fn (Category $category) => $this->categoryDetails($category));
 
         return Inertia::render('Category/Index', [
             'categories' => $categories,
@@ -39,20 +43,7 @@ class CategoryController extends Controller
         $category->load('creator:id,first_name,last_name,username');
 
         return Inertia::render('Category/Show', [
-            'category' => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'code' => $category->code,
-                'description' => $category->description,
-                'status' => $category->is_active ? 'active' : 'inactive',
-                'creator' => $category->creator ? [
-                    'id' => $category->creator->id,
-                    'name' => trim($category->creator->first_name.' '.$category->creator->last_name),
-                    'username' => $category->creator->username,
-                ] : null,
-                'created_at' => $category->created_at?->toIso8601String(),
-                'updated_at' => $category->updated_at?->toIso8601String(),
-            ],
+            'category' => $this->categoryDetails($category),
         ]);
     }
 
@@ -97,5 +88,26 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function categoryDetails(Category $category): array
+    {
+        return [
+            'id' => $category->id,
+            'name' => $category->name,
+            'code' => $category->code,
+            'description' => $category->description,
+            'status' => $category->is_active ? 'active' : 'inactive',
+            'creator' => $category->creator ? [
+                'id' => $category->creator->id,
+                'name' => trim($category->creator->first_name.' '.$category->creator->last_name),
+                'username' => $category->creator->username,
+            ] : null,
+            'created_at' => $category->created_at?->toIso8601String(),
+            'updated_at' => $category->updated_at?->toIso8601String(),
+        ];
     }
 }

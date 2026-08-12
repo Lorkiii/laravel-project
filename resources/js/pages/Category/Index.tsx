@@ -11,10 +11,10 @@ import { Pagination } from '@/components/ui/pagination';
 import { useAuth } from '@/hooks/use-auth';
 import { AppLayout } from '@/layouts/AppLayout';
 import { categoryCreateUrl } from '@/lib/navigation/urls';
-import type { Category } from '@/types/category';
+import type { CategoryDetails } from '@/types/category';
 
 type CategoryIndexProps = {
-    categories: Category[];
+    categories: CategoryDetails[];
 };
 
 export default function CategoryIndex({ categories }: CategoryIndexProps) {

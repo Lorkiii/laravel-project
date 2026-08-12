@@ -27,6 +27,11 @@ class CategoryIndexTest extends TestCase
 
     public function test_authenticated_user_can_view_categories_index_with_created_categories(): void
     {
+        $creator = User::factory()->create([
+            'first_name' => 'Jordan',
+            'last_name' => 'Admin',
+            'username' => 'jordan',
+        ]);
         $user = User::factory()->create([
             'is_active' => true,
         ]);
@@ -36,6 +41,7 @@ class CategoryIndexTest extends TestCase
             'name' => 'Accessories',
             'code' => 'ACC',
             'description' => 'Accessory items',
+            'created_by' => $creator->id,
         ]);
 
         $this->actingAs($user)
@@ -47,6 +53,10 @@ class CategoryIndexTest extends TestCase
                 ->where('categories.0.name', 'Accessories')
                 ->where('categories.0.code', 'ACC')
                 ->where('categories.0.status', 'active')
+                ->where('categories.0.creator.name', 'Jordan Admin')
+                ->where('categories.0.creator.username', 'jordan')
+                ->has('categories.0.created_at')
+                ->has('categories.0.updated_at')
             );
     }
 
