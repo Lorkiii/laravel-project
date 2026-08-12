@@ -1,3 +1,5 @@
+import type { RecordMetadata } from '@/types/record-metadata';
+
 export type CategoryStatus = 'active' | 'inactive';
 
 export type Category = {
@@ -7,6 +9,8 @@ export type Category = {
     description: string | null;
     status: CategoryStatus;
 };
+
+export type CategoryDetails = Category & RecordMetadata;
 
 export type CategoryFormValues = {
     code: string;

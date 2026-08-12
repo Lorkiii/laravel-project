@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
 
             'inventory.view',
             'inventory.adjust',
+            'inventory.stock_out',
 
             'reports.view',
             'reports.export',
@@ -42,42 +43,42 @@ class RolePermissionSeeder extends Seeder
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
-                'name' => $permission
+                'name' => $permission,
             ]);
         }
 
         $admin = Role::firstOrCreate([
-            'name' => 'Administrator'
+            'name' => 'Administrator',
         ]);
 
         $manager = Role::firstOrCreate([
-            'name' => 'Manager'
+            'name' => 'Manager',
         ]);
 
         $staff = Role::firstOrCreate([
-            'name' => 'Warehouse Staff'
+            'name' => 'Warehouse Staff',
         ]);
 
-        $admin->givePermissionTo(Permission::all());
+        $admin->syncPermissions(Permission::all());
 
-        $manager->givePermissionTo([
+        $manager->syncPermissions([
             'products.view',
             'products.create',
             'products.edit',
 
             'categories.view',
-            'categories.create',
-            'categories.edit',
 
             'inventory.view',
             'inventory.adjust',
+            'inventory.stock_out',
 
-            'reports.view'
+            'reports.view',
         ]);
 
-        $staff->givePermissionTo([
+        $staff->syncPermissions([
             'products.view',
-            'inventory.view'
+            'inventory.view',
+            'inventory.stock_out',
         ]);
     }
 }

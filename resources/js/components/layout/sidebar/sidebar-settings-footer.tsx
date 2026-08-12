@@ -27,6 +27,7 @@ export function SidebarSettingsFooter({
             <SidebarNavItem
                 label="Account"
                 href={accountHref}
+                pageName="Settings/Account"
                 icon={UserCog}
                 active={isSidebarPathActive(pathname, accountHref)}
                 onNavigate={onNavigate}

@@ -1,5 +1,6 @@
-import { FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Eye, FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
+import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,14 +20,22 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { categoryUrl } from '@/lib/navigation/urls';
 import type { Category } from '@/types/category';
 
 type CategoryTableProps = {
     categories: Category[];
     onResetFilters: () => void;
+    canEdit: boolean;
+    canDelete: boolean;
 };
 
-export function CategoryTable({ categories, onResetFilters }: CategoryTableProps) {
+export function CategoryTable({
+    categories,
+    onResetFilters,
+    canEdit,
+    canDelete,
+}: CategoryTableProps) {
     return (
         <Table>
             <TableHeader>
@@ -77,14 +86,27 @@ export function CategoryTable({ categories, onResetFilters }: CategoryTableProps
                                 <DropdownMenuContent align="end" className="w-44">
                                     <DropdownMenuLabel>Category actions</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                        <Pencil aria-hidden="true" />
-                                        Edit category
+                                    <DropdownMenuItem asChild>
+                                        <PrefetchedLink
+                                            href={categoryUrl(category.id)}
+                                            pageName="Category/Show"
+                                        >
+                                            <Eye aria-hidden="true" />
+                                            View category
+                                        </PrefetchedLink>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive">
-                                        <Trash2 aria-hidden="true" />
-                                        Delete category
-                                    </DropdownMenuItem>
+                                    {canEdit ? (
+                                        <DropdownMenuItem>
+                                            <Pencil aria-hidden="true" />
+                                            Edit category
+                                        </DropdownMenuItem>
+                                    ) : null}
+                                    {canDelete ? (
+                                        <DropdownMenuItem variant="destructive">
+                                            <Trash2 aria-hidden="true" />
+                                            Delete category
+                                        </DropdownMenuItem>
+                                    ) : null}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>

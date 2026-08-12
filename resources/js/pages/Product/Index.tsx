@@ -8,15 +8,17 @@ import { ProductTable } from "@/components/product/product-table";
 import { ProductsToolbar } from "@/components/product/products-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
+import { useAuth } from "@/hooks/use-auth";
 import { AppLayout } from "@/layouts/AppLayout";
 import { productCreateUrl } from "@/lib/navigation/urls";
-import type { Product } from "@/types/product";
+import type { ProductDetails } from "@/types/product";
 
 type ProductIndexProps = {
-    products: Product[];
+    products: ProductDetails[];
 };
 
 export default function ProductIndex({ products }: ProductIndexProps) {
+    const { user } = useAuth();
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("all");
     const [status, setStatus] = useState("all");
@@ -45,7 +47,7 @@ export default function ProductIndex({ products }: ProductIndexProps) {
             if (sort === "stock-low") return left.quantity - right.quantity;
             return left.name.localeCompare(right.name);
         });
-    }, [category, search, sort, status]);
+    }, [category, products, search, sort, status]);
 
     const totalPages = Math.max(
         1,
@@ -74,14 +76,17 @@ export default function ProductIndex({ products }: ProductIndexProps) {
             setPage(1);
         };
 
-    const addProductAction = (
+    const canCreate = user?.permissions.includes("products.create") ?? false;
+    const canEdit = user?.permissions.includes("products.edit") ?? false;
+    const canDelete = user?.permissions.includes("products.delete") ?? false;
+    const addProductAction = canCreate ? (
         <Button asChild>
             <PrefetchedLink href={productCreateUrl()} pageName="Product/Create">
                 <PackagePlus aria-hidden="true" />
                 Add product
             </PrefetchedLink>
         </Button>
-    );
+    ) : undefined;
 
     return (
         <div className="mx-auto w-full max-w-[1600px]">
@@ -95,7 +100,11 @@ export default function ProductIndex({ products }: ProductIndexProps) {
                 {isCatalogEmpty ? (
                     <EmptyState
                         title="No products yet"
-                        description="Add your first product to start building your catalog and tracking stock."
+                        description={
+                            canCreate
+                                ? "Add your first product to start building your catalog and tracking stock."
+                                : "There are no products available to view yet."
+                        }
                         icon={
                             <Package aria-hidden="true" className="h-5 w-5" />
                         }
@@ -119,6 +128,8 @@ export default function ProductIndex({ products }: ProductIndexProps) {
                         <ProductTable
                             products={visibleProducts}
                             onResetFilters={resetFilters}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
                         />
                         <Pagination
                             currentPage={Math.min(page, totalPages)}

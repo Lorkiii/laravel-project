@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Settings\AccountController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/products', [ProductController::class, 'store'])
         ->middleware('permission:products.create')
         ->name('products.store');
+    Route::get('/products/{product}', [ProductController::class, 'show'])
+        ->middleware('permission:products.view')
+        ->name('products.show');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])
+        ->middleware('permission:products.edit')
+        ->name('products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])
+        ->middleware('permission:products.edit')
+        ->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])
+        ->middleware('permission:products.delete')
+        ->name('products.destroy');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -41,6 +54,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/categories', [CategoryController::class, 'store'])
         ->middleware('permission:categories.create')
         ->name('categories.store');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])
+        ->middleware('permission:categories.view')
+        ->name('categories.show');
+
+    Route::get('/inventory', [InventoryController::class, 'index'])
+        ->middleware('permission:inventory.view')
+        ->name('inventory.index');
+    Route::post('/inventory/stock-out', [InventoryController::class, 'storeStockOut'])
+        ->middleware('permission:inventory.stock_out')
+        ->name('inventory.stock-out.store');
 
     Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');

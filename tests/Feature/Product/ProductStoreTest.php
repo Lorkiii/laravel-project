@@ -109,6 +109,7 @@ class ProductStoreTest extends TestCase
             'description' => 'A compact keyboard',
             'quantity' => 10,
             'status' => 1,
+            'created_by' => $user->id,
         ]);
     }
 

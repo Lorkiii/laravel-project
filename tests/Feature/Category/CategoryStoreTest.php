@@ -48,7 +48,7 @@ class CategoryStoreTest extends TestCase
         $user = User::factory()->create([
             'is_active' => true,
         ]);
-        $user->assignRole('Manager');
+        $user->assignRole('Administrator');
 
         $this->actingAs($user)
             ->post(route('categories.store'), [
@@ -66,6 +66,23 @@ class CategoryStoreTest extends TestCase
             'name' => 'Accessories',
             'code' => 'ACC',
             'description' => 'Accessory items',
+            'created_by' => $user->id,
         ]);
+    }
+
+    public function test_manager_cannot_store_categories(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $manager->assignRole('Manager');
+
+        $this->actingAs($manager)
+            ->post(route('categories.store'), [
+                'name' => 'Accessories',
+                'code' => 'ACC',
+                'description' => 'Accessory items',
+            ])
+            ->assertForbidden();
     }
 }

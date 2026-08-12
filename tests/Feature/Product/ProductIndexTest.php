@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Product;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,6 +38,51 @@ class ProductIndexTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Product/Index')
+            );
+    }
+
+    public function test_product_index_includes_data_required_by_the_details_modal(): void
+    {
+        $creator = User::factory()->create([
+            'first_name' => 'Taylor',
+            'last_name' => 'Admin',
+            'username' => 'taylor',
+        ]);
+        $staff = User::factory()->create();
+        $staff->assignRole('Warehouse Staff');
+        $category = Category::factory()->create(['name' => 'Accessories']);
+        Product::factory()->for($category)->create([
+            'name' => 'Wireless Keyboard',
+            'sku' => 'ACC-LOGITECH-K6',
+            'brand' => 'Logitech',
+            'model' => 'K6',
+            'description' => 'A compact keyboard',
+            'price' => 49.99,
+            'quantity' => 10,
+            'minimum_stock' => 2,
+            'status' => true,
+            'created_by' => $creator->id,
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('products.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Product/Index')
+                ->where('products.0.name', 'Wireless Keyboard')
+                ->where('products.0.sku', 'ACC-LOGITECH-K6')
+                ->where('products.0.category', 'Accessories')
+                ->where('products.0.brand', 'Logitech')
+                ->where('products.0.model', 'K6')
+                ->where('products.0.description', 'A compact keyboard')
+                ->where('products.0.price', 49.99)
+                ->where('products.0.quantity', 10)
+                ->where('products.0.minimum_stock', 2)
+                ->where('products.0.status', 'active')
+                ->where('products.0.creator.name', 'Taylor Admin')
+                ->where('products.0.creator.username', 'taylor')
+                ->has('products.0.created_at')
+                ->has('products.0.updated_at')
             );
     }
 

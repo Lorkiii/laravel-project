@@ -8,6 +8,7 @@ import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
+import { useAuth } from '@/hooks/use-auth';
 import { AppLayout } from '@/layouts/AppLayout';
 import { categoryCreateUrl } from '@/lib/navigation/urls';
 import type { Category } from '@/types/category';
@@ -17,6 +18,7 @@ type CategoryIndexProps = {
 };
 
 export default function CategoryIndex({ categories }: CategoryIndexProps) {
+    const { user } = useAuth();
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('all');
     const [sort, setSort] = useState('name-asc');
@@ -58,14 +60,17 @@ export default function CategoryIndex({ categories }: CategoryIndexProps) {
         setPage(1);
     };
 
-    const addCategoryAction = (
+    const canCreate = user?.permissions.includes('categories.create') ?? false;
+    const canEdit = user?.permissions.includes('categories.edit') ?? false;
+    const canDelete = user?.permissions.includes('categories.delete') ?? false;
+    const addCategoryAction = canCreate ? (
         <Button asChild>
             <PrefetchedLink href={categoryCreateUrl()} pageName="Category/Create">
                 <FolderPlus aria-hidden="true" />
                 Add category
             </PrefetchedLink>
         </Button>
-    );
+    ) : undefined;
 
     return (
         <div className="mx-auto w-full max-w-[1600px]">
@@ -79,7 +84,11 @@ export default function CategoryIndex({ categories }: CategoryIndexProps) {
                 {isCatalogEmpty ? (
                     <EmptyState
                         title="No categories yet"
-                        description="Add your first category to start organizing products in your catalog."
+                        description={
+                            canCreate
+                                ? 'Add your first category to start organizing products in your catalog.'
+                                : 'There are no categories available to view yet.'
+                        }
                         icon={<FolderTree aria-hidden="true" className="h-5 w-5" />}
                         action={addCategoryAction}
                         className="py-16"
@@ -95,7 +104,12 @@ export default function CategoryIndex({ categories }: CategoryIndexProps) {
                             onSortChange={updateFilter(setSort)}
                             onReset={resetFilters}
                         />
-                        <CategoryTable categories={visibleCategories} onResetFilters={resetFilters} />
+                        <CategoryTable
+                            categories={visibleCategories}
+                            onResetFilters={resetFilters}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                        />
                         <Pagination
                             currentPage={Math.min(page, totalPages)}
                             totalPages={totalPages}

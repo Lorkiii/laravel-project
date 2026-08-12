@@ -16,8 +16,11 @@ import { PrefetchedLink } from "@/components/navigation/prefetched-link";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { productsUrl } from "@/lib/navigation/urls";
-import type { ProductFormValues } from "@/types/product";
+import {
+    productsUrl,
+    productUpdateUrl,
+} from "@/lib/navigation/urls";
+import type { EditableProduct, ProductFormValues } from "@/types/product";
 
 const initialValues: ProductFormValues = {
     name: "",
@@ -33,21 +36,45 @@ const initialValues: ProductFormValues = {
 
 type ProductFormProps = {
     categories: { value: string; label: string; code: string }[];
+    product?: EditableProduct;
 };
 
-function previewSku(categoryCode: string, brand: string, model: string): string {
+function formValues(product?: EditableProduct): ProductFormValues {
+    if (!product) {
+        return initialValues;
+    }
+
+    return {
+        name: product.name,
+        brand: product.brand,
+        model: product.model,
+        category_id: product.category_id,
+        description: product.description,
+        price: product.price,
+        quantity: product.quantity,
+        minimum_stock: product.minimum_stock,
+        status: product.status,
+    };
+}
+
+function previewSku(
+    categoryCode: string,
+    brand: string,
+    model: string,
+    fallback = "Auto-generated",
+): string {
     const parts = [categoryCode, brand, model]
         .map((part) => part.trim())
         .filter(Boolean)
         .map((part) => part.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
         .filter(Boolean);
 
-    return parts.length > 0 ? parts.join("-") : "Auto-generated";
+    return parts.length > 0 ? parts.join("-") : fallback;
 }
 
-export function ProductForm({ categories }: ProductFormProps) {
-    const { data, setData, post, processing, errors } =
-        useForm<ProductFormValues>(initialValues);
+export function ProductForm({ categories, product }: ProductFormProps) {
+    const { data, setData, post, put, processing, errors } =
+        useForm<ProductFormValues>(formValues(product));
 
     const update = (
         field: keyof ProductFormValues,
@@ -63,6 +90,7 @@ export function ProductForm({ categories }: ProductFormProps) {
         selectedCategoryCode,
         data.brand,
         data.model,
+        product?.sku,
     );
 
     return (
@@ -70,13 +98,19 @@ export function ProductForm({ categories }: ProductFormProps) {
             <CardHeader className="border-b border-slate-100">
                 <CardTitle>Product information</CardTitle>
                 <CardDescription>
-                    Add the core details and stock thresholds for this product.
+                    {product
+                        ? "Update the product details and stock thresholds."
+                        : "Add the core details and stock thresholds for this product."}
                 </CardDescription>
             </CardHeader>
             <form
                 onSubmit={(event) => {
                     event.preventDefault();
-                    post(productsUrl());
+                    if (product) {
+                        put(productUpdateUrl(product.id));
+                    } else {
+                        post(productsUrl());
+                    }
                 }}
             >
                 <CardContent className="space-y-8 p-4 sm:p-6">
@@ -265,7 +299,7 @@ export function ProductForm({ categories }: ProductFormProps) {
                     </Button>
                     <Button type="submit" disabled={processing}>
                         <Save aria-hidden="true" />
-                        Save product
+                        {product ? "Save changes" : "Save product"}
                     </Button>
                 </CardFooter>
             </form>

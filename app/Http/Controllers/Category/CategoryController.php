@@ -34,6 +34,28 @@ class CategoryController extends Controller
         return Inertia::render('Category/Create');
     }
 
+    public function show(Category $category): Response
+    {
+        $category->load('creator:id,first_name,last_name,username');
+
+        return Inertia::render('Category/Show', [
+            'category' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'code' => $category->code,
+                'description' => $category->description,
+                'status' => $category->is_active ? 'active' : 'inactive',
+                'creator' => $category->creator ? [
+                    'id' => $category->creator->id,
+                    'name' => trim($category->creator->first_name.' '.$category->creator->last_name),
+                    'username' => $category->creator->username,
+                ] : null,
+                'created_at' => $category->created_at?->toIso8601String(),
+                'updated_at' => $category->updated_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -41,6 +63,7 @@ class CategoryController extends Controller
             'code' => ['required', 'string', 'max:6', 'unique:categories,code', 'alpha_num', 'uppercase'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);
+        $validated['created_by'] = $request->user()->id;
 
         Category::create($validated);
 

@@ -1,3 +1,5 @@
+import type { RecordMetadata } from '@/types/record-metadata';
+
 export type ProductStatus = 'active' | 'inactive';
 
 export type Product = {
@@ -15,6 +17,8 @@ export type Product = {
     model: string;
 };
 
+export type ProductDetails = Product & RecordMetadata;
+
 export type ProductFormValues = {
     name: string;
     brand: string;
@@ -25,4 +29,9 @@ export type ProductFormValues = {
     quantity: number | string;
     minimum_stock: number | string;
     status: boolean;
+};
+
+export type EditableProduct = ProductFormValues & {
+    id: number;
+    sku: string;
 };

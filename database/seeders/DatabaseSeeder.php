@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'System',
                 'last_name' => 'Administrator',
                 'phone_number' => '1234567890',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('admin-password'),
                 'is_active' => true,
             ],
         );
@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'Casey',
                 'last_name' => 'Manager',
                 'phone_number' => '1234567891',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('manager-password'),
                 'is_active' => true,
             ],
         );
@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'Riley',
                 'last_name' => 'Staff',
                 'phone_number' => '1234567892',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('staff-password'),
                 'is_active' => true,
             ],
         );
@@ -59,5 +59,7 @@ class DatabaseSeeder extends Seeder
         $admin->syncRoles(['Administrator']);
         $manager->syncRoles(['Manager']);
         $staff->syncRoles(['Warehouse Staff']);
+
+        $this->call(ProductCatalogSeeder::class);
     }
 }

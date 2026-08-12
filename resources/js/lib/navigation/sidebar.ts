@@ -80,6 +80,7 @@ export function getSidebarNav(): SidebarItem[] {
             label: 'Inventory',
             icon: Warehouse,
             href: inventoryUrl(),
+            pageName: 'Inventory/Index',
             permission: 'inventory.view',
         },
         {
