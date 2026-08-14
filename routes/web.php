@@ -7,6 +7,7 @@ use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -62,6 +63,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])
         ->middleware('permission:inventory.view')
         ->name('inventory.index');
+    Route::get('/inventory/{product}', [InventoryController::class, 'show'])
+        ->middleware('permission:inventory.view')
+        ->name('inventory.show');
 
     Route::get('/stock-movements', [StockMovementController::class, 'index'])
         ->middleware('permission:inventory.view_movements')
@@ -84,6 +88,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/stock-movements/adjustment', [StockMovementController::class, 'storeAdjustment'])
         ->middleware('permission:inventory.adjust')
         ->name('stock-movements.adjustment.store');
+
+    Route::get('/users', [UserController::class, 'index'])
+        ->middleware('permission:users.view')
+        ->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])
+        ->middleware('permission:users.create')
+        ->name('users.store');
 
     Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');

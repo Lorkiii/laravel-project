@@ -16,6 +16,7 @@ export type InventoryItem = {
     id: number;
     name: string;
     sku: string;
+    category?: string;
     quantity: number;
     minimum_stock: number;
     is_active: boolean;

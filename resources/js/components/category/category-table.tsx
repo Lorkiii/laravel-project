@@ -2,17 +2,9 @@ import { Eye, FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { CategoryDetailsContent } from '@/components/category/category-details-content';
+import { ViewDetailsModal } from '@/components/details/view-details-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -190,44 +182,28 @@ export function CategoryTable({
                 </TableBody>
             </Table>
 
-            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+            <ViewDetailsModal
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                title={selectedCategory?.name ?? 'Category details'}
+                description={
+                    selectedCategory
+                        ? `Complete category details for ${selectedCategory.code}.`
+                        : undefined
+                }
+                onCloseAutoFocus={(event) => {
+                    event.preventDefault();
+                    if (selectedCategory) {
+                        actionButtonRefs.current
+                            .get(selectedCategory.id)
+                            ?.focus();
+                    }
+                }}
+            >
                 {selectedCategory ? (
-                    <DialogContent
-                        showCloseButton={false}
-                        onCloseAutoFocus={(event) => {
-                            event.preventDefault();
-                            actionButtonRefs.current
-                                .get(selectedCategory.id)
-                                ?.focus();
-                        }}
-                        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden bg-background p-0 text-foreground sm:max-w-4xl"
-                    >
-                        <DialogHeader className="border-b border-border px-5 py-4 sm:px-6">
-                            <DialogTitle className="text-foreground">
-                                {selectedCategory.name}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground">
-                                Complete category details for{' '}
-                                {selectedCategory.code}.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="overflow-y-auto bg-muted/30 p-4 sm:p-6">
-                            <CategoryDetailsContent
-                                category={selectedCategory}
-                            />
-                        </div>
-
-                        <DialogFooter className="border-t border-border px-5 py-4 sm:px-6">
-                            <DialogClose asChild>
-                                <Button type="button" variant="outline">
-                                    Close
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
+                    <CategoryDetailsContent category={selectedCategory} />
                 ) : null}
-            </Dialog>
+            </ViewDetailsModal>
         </>
     );
 }

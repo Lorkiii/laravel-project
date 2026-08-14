@@ -15,6 +15,21 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
+    public const ROLE_ADMINISTRATOR = 'Administrator';
+
+    public const ROLE_MANAGER = 'Manager';
+
+    public const ROLE_STAFF = 'Warehouse Staff';
+
+    /**
+     * @var list<string>
+     */
+    public const ASSIGNABLE_ROLES = [
+        self::ROLE_ADMINISTRATOR,
+        self::ROLE_MANAGER,
+        self::ROLE_STAFF,
+    ];
+
     /**
      * @var list<string>
      */

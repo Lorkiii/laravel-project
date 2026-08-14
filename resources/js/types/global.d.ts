@@ -20,6 +20,11 @@ declare module '@inertiajs/core' {
                 description: string;
                 actionLabel?: string;
             };
+            createdUserCredentials?: {
+                email: string;
+                username: string;
+                password: string;
+            };
         };
         sharedPageProps: {
             app: {
