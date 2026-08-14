@@ -2,20 +2,12 @@ import { Eye, MoreHorizontal, Package, Pencil, Trash2 } from "lucide-react";
 import { router } from "@inertiajs/react";
 import { useRef, useState } from "react";
 
+import { ViewDetailsModal } from "@/components/details/view-details-modal";
 import { PrefetchedLink } from "@/components/navigation/prefetched-link";
 import { ProductDetailsContent } from "@/components/product/product-details-content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -262,44 +254,28 @@ export function ProductTable({
             </TableBody>
             </Table>
 
-            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+            <ViewDetailsModal
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                title={selectedProduct?.name ?? "Product details"}
+                description={
+                    selectedProduct
+                        ? `Complete product details for ${selectedProduct.sku}.`
+                        : undefined
+                }
+                onCloseAutoFocus={(event) => {
+                    event.preventDefault();
+                    if (selectedProduct) {
+                        actionButtonRefs.current
+                            .get(selectedProduct.id)
+                            ?.focus();
+                    }
+                }}
+            >
                 {selectedProduct ? (
-                    <DialogContent
-                        showCloseButton={false}
-                        onCloseAutoFocus={(event) => {
-                            event.preventDefault();
-                            actionButtonRefs.current
-                                .get(selectedProduct.id)
-                                ?.focus();
-                        }}
-                        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden bg-background p-0 text-foreground sm:max-w-4xl"
-                    >
-                        <DialogHeader className="border-b border-border px-5 py-4 sm:px-6">
-                            <DialogTitle className="text-foreground">
-                                {selectedProduct.name}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground">
-                                Complete product details for{' '}
-                                {selectedProduct.sku}.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="overflow-y-auto bg-muted/30 p-4 sm:p-6">
-                            <ProductDetailsContent
-                                product={selectedProduct}
-                            />
-                        </div>
-
-                        <DialogFooter className="border-t border-border px-5 py-4 sm:px-6">
-                            <DialogClose asChild>
-                                <Button type="button" variant="outline">
-                                    Close
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
+                    <ProductDetailsContent product={selectedProduct} />
                 ) : null}
-            </Dialog>
+            </ViewDetailsModal>
         </>
     );
 }

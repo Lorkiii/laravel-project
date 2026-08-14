@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-
+import { DetailField } from '@/components/details/details-fields';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDateTime } from '@/lib/formatters';
@@ -8,23 +7,6 @@ import type { ProductDetails } from '@/types/product';
 type ProductDetailsContentProps = {
     product: ProductDetails;
 };
-
-function DetailItem({
-    label,
-    children,
-}: {
-    label: string;
-    children: ReactNode;
-}) {
-    return (
-        <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {label}
-            </dt>
-            <dd className="mt-1 text-sm text-foreground">{children}</dd>
-        </div>
-    );
-}
 
 export function ProductDetailsContent({
     product,
@@ -37,25 +19,25 @@ export function ProductDetailsContent({
                 </CardHeader>
                 <CardContent className="p-5 sm:p-6">
                     <dl className="grid gap-6 sm:grid-cols-2">
-                        <DetailItem label="SKU">
+                        <DetailField label="SKU">
                             <span className="font-mono">{product.sku}</span>
-                        </DetailItem>
-                        <DetailItem label="Category">
+                        </DetailField>
+                        <DetailField label="Category">
                             {product.category || '—'}
-                        </DetailItem>
-                        <DetailItem label="Brand">
+                        </DetailField>
+                        <DetailField label="Brand">
                             {product.brand || '—'}
-                        </DetailItem>
-                        <DetailItem label="Model">
+                        </DetailField>
+                        <DetailField label="Model">
                             {product.model || '—'}
-                        </DetailItem>
-                        <DetailItem label="Price">
+                        </DetailField>
+                        <DetailField label="Price">
                             $
                             {product.price.toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
                             })}
-                        </DetailItem>
-                        <DetailItem label="Status">
+                        </DetailField>
+                        <DetailField label="Status">
                             <Badge
                                 className={
                                     product.status === 'active'
@@ -67,20 +49,21 @@ export function ProductDetailsContent({
                                     ? 'Active'
                                     : 'Inactive'}
                             </Badge>
-                        </DetailItem>
-                        <DetailItem label="Quantity">
+                        </DetailField>
+                        <DetailField label="Quantity">
                             {product.quantity}
-                        </DetailItem>
-                        <DetailItem label="Minimum stock">
+                        </DetailField>
+                        <DetailField label="Minimum stock">
                             {product.minimum_stock}
-                        </DetailItem>
-                        <div className="sm:col-span-2">
-                            <DetailItem label="Description">
-                                <span className="whitespace-pre-wrap break-words">
-                                    {product.description || '—'}
-                                </span>
-                            </DetailItem>
-                        </div>
+                        </DetailField>
+                        <DetailField
+                            label="Description"
+                            className="sm:col-span-2"
+                        >
+                            <span className="whitespace-pre-wrap break-words">
+                                {product.description || '—'}
+                            </span>
+                        </DetailField>
                     </dl>
                 </CardContent>
             </Card>
@@ -91,17 +74,17 @@ export function ProductDetailsContent({
                 </CardHeader>
                 <CardContent className="p-5 sm:p-6">
                     <dl className="space-y-6">
-                        <DetailItem label="Created by">
+                        <DetailField label="Created by">
                             {product.creator
                                 ? `${product.creator.name} (@${product.creator.username})`
                                 : 'Unknown'}
-                        </DetailItem>
-                        <DetailItem label="Created">
+                        </DetailField>
+                        <DetailField label="Created">
                             {formatDateTime(product.created_at)}
-                        </DetailItem>
-                        <DetailItem label="Last updated">
+                        </DetailField>
+                        <DetailField label="Last updated">
                             {formatDateTime(product.updated_at)}
-                        </DetailItem>
+                        </DetailField>
                     </dl>
                 </CardContent>
             </Card>

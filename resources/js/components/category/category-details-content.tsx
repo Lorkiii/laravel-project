@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-
+import { DetailField } from '@/components/details/details-fields';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDateTime } from '@/lib/formatters';
@@ -8,23 +7,6 @@ import type { CategoryDetails } from '@/types/category';
 type CategoryDetailsContentProps = {
     category: CategoryDetails;
 };
-
-function DetailItem({
-    label,
-    children,
-}: {
-    label: string;
-    children: ReactNode;
-}) {
-    return (
-        <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {label}
-            </dt>
-            <dd className="mt-1 text-sm text-foreground">{children}</dd>
-        </div>
-    );
-}
 
 export function CategoryDetailsContent({
     category,
@@ -37,11 +19,11 @@ export function CategoryDetailsContent({
                 </CardHeader>
                 <CardContent className="p-5 sm:p-6">
                     <dl className="grid gap-6 sm:grid-cols-2">
-                        <DetailItem label="Code">
+                        <DetailField label="Code">
                             <span className="font-mono">{category.code}</span>
-                        </DetailItem>
-                        <DetailItem label="Name">{category.name}</DetailItem>
-                        <DetailItem label="Status">
+                        </DetailField>
+                        <DetailField label="Name">{category.name}</DetailField>
+                        <DetailField label="Status">
                             <Badge
                                 className={
                                     category.status === 'active'
@@ -51,14 +33,15 @@ export function CategoryDetailsContent({
                             >
                                 {category.status === 'active' ? 'Active' : 'Inactive'}
                             </Badge>
-                        </DetailItem>
-                        <div className="sm:col-span-2">
-                            <DetailItem label="Description">
-                                <span className="whitespace-pre-wrap break-words">
-                                    {category.description || '—'}
-                                </span>
-                            </DetailItem>
-                        </div>
+                        </DetailField>
+                        <DetailField
+                            label="Description"
+                            className="sm:col-span-2"
+                        >
+                            <span className="whitespace-pre-wrap break-words">
+                                {category.description || '—'}
+                            </span>
+                        </DetailField>
                     </dl>
                 </CardContent>
             </Card>
@@ -69,17 +52,17 @@ export function CategoryDetailsContent({
                 </CardHeader>
                 <CardContent className="p-5 sm:p-6">
                     <dl className="space-y-6">
-                        <DetailItem label="Created by">
+                        <DetailField label="Created by">
                             {category.creator
                                 ? `${category.creator.name} (@${category.creator.username})`
                                 : 'Unknown'}
-                        </DetailItem>
-                        <DetailItem label="Created">
+                        </DetailField>
+                        <DetailField label="Created">
                             {formatDateTime(category.created_at)}
-                        </DetailItem>
-                        <DetailItem label="Last updated">
+                        </DetailField>
+                        <DetailField label="Last updated">
                             {formatDateTime(category.updated_at)}
-                        </DetailItem>
+                        </DetailField>
                     </dl>
                 </CardContent>
             </Card>

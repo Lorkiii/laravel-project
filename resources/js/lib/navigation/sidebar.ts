@@ -110,6 +110,7 @@ export function getSidebarNav(): SidebarItem[] {
                     label: 'Users',
                     icon: Users,
                     href: usersUrl(),
+                    pageName: 'Users/Index',
                     permission: 'users.view',
                 },
             ],

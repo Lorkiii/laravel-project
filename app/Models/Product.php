@@ -51,4 +51,22 @@ class Product extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    /**
+     * @return 'in_stock'|'low_stock'|'out_of_stock'
+     */
+    public function stockStatus(): string
+    {
+        $quantity = (int) $this->quantity;
+
+        if ($quantity === 0) {
+            return 'out_of_stock';
+        }
+
+        if ($quantity <= (float) $this->minimum_stock) {
+            return 'low_stock';
+        }
+
+        return 'in_stock';
+    }
 }

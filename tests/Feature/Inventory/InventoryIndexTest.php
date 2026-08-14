@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Inventory;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -24,20 +25,21 @@ class InventoryIndexTest extends TestCase
     {
         $staff = User::factory()->create();
         $staff->assignRole('Warehouse Staff');
+        $category = Category::factory()->create(['name' => 'Accessories']);
 
-        Product::factory()->create([
+        Product::factory()->for($category)->create([
             'name' => 'Available Product',
             'sku' => 'TEST-IN',
             'quantity' => 11,
             'minimum_stock' => 10,
         ]);
-        Product::factory()->create([
+        Product::factory()->for($category)->create([
             'name' => 'Low Product',
             'sku' => 'TEST-LOW',
             'quantity' => 5,
             'minimum_stock' => 5,
         ]);
-        Product::factory()->create([
+        Product::factory()->for($category)->create([
             'name' => 'Empty Product',
             'sku' => 'TEST-OUT',
             'quantity' => 0,
@@ -51,8 +53,10 @@ class InventoryIndexTest extends TestCase
                 ->component('Inventory/Index')
                 ->has('items', 3)
                 ->missing('movements')
+                ->missing('canStockOut')
                 ->where('items.0.name', 'Available Product')
                 ->where('items.0.sku', 'TEST-IN')
+                ->where('items.0.category', 'Accessories')
                 ->where('items.0.quantity', 11)
                 ->where('items.0.minimum_stock', 10)
                 ->where('items.0.stock_status', 'in_stock')
