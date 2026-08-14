@@ -1,6 +1,5 @@
 import {
     Package,
-    FolderTree,
     TriangleAlert,
     ArrowLeftRight,
     type LucideIcon,
@@ -9,9 +8,22 @@ import {
 
 export type DashboardStats = {
     products: number;
-    categories: number;
     low_stock: number;
     movements_today: number;
+};
+
+export type StockTrendPoint = {
+    date: string;
+    label: string;
+    stock_in: number;
+    stock_out: number;
+};
+
+export type StaffStockOverview = {
+    total_quantity: number;
+    in_stock_count: number;
+    out_of_stock_count: number;
+    trend: StockTrendPoint[];
 };
 
 export type DashboardStatCard = {
@@ -30,13 +42,6 @@ const STAT_CARD_CONFIG: Array<Omit<DashboardStatCard, 'value'>> = [
         label: 'Products',
         iconClassName: 'text-blue-500',
         description: 'Total products in catalog',
-    },
-    {
-        key: 'categories',
-        icon: FolderTree,
-        label: 'Categories',
-        iconClassName: 'text-green-500',
-        description: 'Active product categories',
     },
     {
         key: 'low_stock',
