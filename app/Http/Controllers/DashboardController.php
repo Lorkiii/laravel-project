@@ -122,7 +122,7 @@ class DashboardController extends Controller
             'inactive_users' => null,
             'stock_overview' => null,
             'attention_items' => null,
-            'recent_movements' => null,
+            'recent_movements' => $this->recentMovements(),
             'movement_mix' => [
                 'stock_in' => (int) $todaysMovements
                     ->where('type', StockMovement::TYPE_STOCK_IN)

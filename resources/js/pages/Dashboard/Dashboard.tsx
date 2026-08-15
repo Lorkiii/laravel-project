@@ -61,6 +61,7 @@ export default function Dashboard({
                         }
                         topProducts={top_products ?? []}
                         recentAdjustments={recent_adjustments ?? []}
+                        recentMovements={recent_movements ?? []}
                     />
                 </>
             ) : (

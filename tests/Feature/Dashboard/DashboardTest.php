@@ -161,8 +161,8 @@ class DashboardTest extends TestCase
             'status' => false,
         ]);
 
-        $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_IN, 2);
-        $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_OUT, 1);
+        $stockIn = $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_IN, 2);
+        $stockOut = $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_OUT, 1);
         $staffAdjustment = $this->movement($outProduct, $staff, StockMovement::TYPE_ADJUSTMENT, -1);
         $adminAdjustment = $this->movement($lowProduct, $admin, StockMovement::TYPE_ADJUSTMENT, 4);
 
@@ -182,7 +182,6 @@ class DashboardTest extends TestCase
                 ->where('inactive_users', null)
                 ->where('stock_overview', null)
                 ->where('attention_items', null)
-                ->where('recent_movements', null)
                 ->missing('low_stock_items')
                 ->where('movement_mix.stock_in', 2)
                 ->where('movement_mix.stock_out', 1)
@@ -197,6 +196,15 @@ class DashboardTest extends TestCase
                 ->where('recent_adjustments.0.type', StockMovement::TYPE_ADJUSTMENT)
                 ->where('recent_adjustments.1.id', $staffAdjustment->id)
                 ->where('recent_adjustments.1.recorded_by', "{$staff->first_name} {$staff->last_name}")
+                ->has('recent_movements', 4)
+                ->where('recent_movements.0.id', $adminAdjustment->id)
+                ->where('recent_movements.0.type', StockMovement::TYPE_ADJUSTMENT)
+                ->where('recent_movements.1.id', $staffAdjustment->id)
+                ->where('recent_movements.2.id', $stockOut->id)
+                ->where('recent_movements.2.type', StockMovement::TYPE_STOCK_OUT)
+                ->where('recent_movements.3.id', $stockIn->id)
+                ->where('recent_movements.3.type', StockMovement::TYPE_STOCK_IN)
+                ->where('recent_movements.3.recorded_by', "{$staff->first_name} {$staff->last_name}")
             );
     }
 
@@ -223,6 +231,7 @@ class DashboardTest extends TestCase
                 ->where('movement_mix.adjustment', 0)
                 ->where('top_products', [])
                 ->where('recent_adjustments', [])
+                ->where('recent_movements', [])
             );
     }
 
@@ -248,6 +257,7 @@ class DashboardTest extends TestCase
                 ->has('recent_adjustments', 5)
                 ->where('recent_adjustments.0.type', StockMovement::TYPE_ADJUSTMENT)
                 ->where('recent_adjustments.4.type', StockMovement::TYPE_ADJUSTMENT)
+                ->has('recent_movements', 5)
             );
     }
 

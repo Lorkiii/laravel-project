@@ -2,26 +2,43 @@ import {
     ArrowLeftRight,
     ChevronRight,
     Package,
+    PackageMinus,
+    PackagePlus,
 } from 'lucide-react';
 
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { PrefetchedLink } from '@/components/navigation/prefetched-link';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { AdminMovementMix, AdminTopProduct } from '@/lib/dashboard/stats';
 import { productUrl, stockMovementsUrl } from '@/lib/navigation/urls';
 import { cn } from '@/lib/utils';
-import type { StockMovement } from '@/types/inventory';
+import type { StockMovement, StockMovementType } from '@/types/inventory';
 
 export type AdminRecentAdjustment = Pick<
     StockMovement,
     'id' | 'product' | 'quantity' | 'reason' | 'recorded_by' | 'created_at'
 >;
 
+export type AdminRecentMovement = Pick<
+    StockMovement,
+    'id' | 'product' | 'type' | 'quantity' | 'reason' | 'recorded_by' | 'created_at'
+>;
+
 type AdminDashboardSectionsProps = {
     movementMix: AdminMovementMix;
     topProducts: AdminTopProduct[];
     recentAdjustments: AdminRecentAdjustment[];
+    recentMovements: AdminRecentMovement[];
 };
 
 const mixItems = [
@@ -45,21 +62,69 @@ const mixItems = [
     },
 ];
 
+const typeMeta = {
+    stock_in: {
+        label: 'Stock In',
+        icon: PackagePlus,
+        className:
+            'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50',
+        quantityClassName: 'text-emerald-700',
+    },
+    stock_out: {
+        label: 'Stock Out',
+        icon: PackageMinus,
+        className:
+            'border-red-200 bg-red-50 text-red-700 hover:bg-red-50',
+        quantityClassName: 'text-red-700',
+    },
+    adjustment: {
+        label: 'Adjustment',
+        icon: ArrowLeftRight,
+        className:
+            'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50',
+        quantityClassName: 'text-slate-700',
+    },
+} satisfies Record<
+    StockMovementType,
+    {
+        label: string;
+        icon: typeof PackagePlus;
+        className: string;
+        quantityClassName: string;
+    }
+>;
+
 function formatAdjustmentQuantity(quantity: number): string {
     return quantity > 0 ? `+${quantity}` : String(quantity);
+}
+
+function formatQuantity(type: StockMovementType, quantity: number): string {
+    if (type === 'stock_in') {
+        return `+${quantity}`;
+    }
+
+    if (type === 'adjustment') {
+        return quantity > 0 ? `+${quantity}` : String(quantity);
+    }
+
+    return `-${quantity}`;
 }
 
 export function AdminDashboardSections({
     movementMix,
     topProducts,
     recentAdjustments,
+    recentMovements,
 }: AdminDashboardSectionsProps) {
     return (
-        <div className="mt-6 grid items-stretch gap-4 lg:grid-cols-2">
-            <MovementMixCard mix={movementMix} />
-            <TopProductsCard products={topProducts} />
-            <RecentAdjustmentsCard adjustments={recentAdjustments} />
-            <AdminQuickActions />
+        <div className="mt-6 space-y-4">
+            <div className="grid items-stretch gap-4 lg:grid-cols-2">
+                <MovementMixCard mix={movementMix} />
+                <TopProductsCard products={topProducts} />
+                <RecentAdjustmentsCard adjustments={recentAdjustments} />
+                <AdminQuickActions />
+            </div>
+            <RecentStockMovementsCard movements={recentMovements} />
         </div>
     );
 }
@@ -235,6 +300,102 @@ function RecentAdjustmentsCard({
                     </ul>
                 )}
             </CardContent>
+        </Card>
+    );
+}
+
+function RecentStockMovementsCard({
+    movements,
+}: {
+    movements: AdminRecentMovement[];
+}) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border pb-3">
+                <CardTitle>Recent Stock Movements</CardTitle>
+                <PrefetchedLink
+                    href={stockMovementsUrl()}
+                    pageName="StockMovements/Index"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                >
+                    View all movements
+                    <ChevronRight aria-hidden="true" className="h-4 w-4" />
+                </PrefetchedLink>
+            </CardHeader>
+            {movements.length === 0 ? (
+                <EmptyState
+                    title="No recent stock movements"
+                    description="Stock in, stock out, and adjustment activity will appear here."
+                    icon={
+                        <ArrowLeftRight
+                            aria-hidden="true"
+                            className="h-5 w-5"
+                        />
+                    }
+                    className="py-8"
+                />
+            ) : (
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent">
+                                <TableHead>Date</TableHead>
+                                <TableHead>Product</TableHead>
+                                <TableHead>SKU</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead className="text-right">
+                                    Quantity
+                                </TableHead>
+                                <TableHead>Reason</TableHead>
+                                <TableHead>User</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {movements.map((movement) => {
+                                const meta = typeMeta[movement.type];
+                                const TypeIcon = meta.icon;
+
+                                return (
+                                    <TableRow key={movement.id}>
+                                        <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                                            {movement.created_at}
+                                        </TableCell>
+                                        <TableCell className="min-w-48 font-medium text-slate-900">
+                                            {movement.product.name}
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap font-mono text-xs text-slate-500">
+                                            {movement.product.sku}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge className={meta.className}>
+                                                <TypeIcon aria-hidden="true" />
+                                                {meta.label}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell
+                                            className={cn(
+                                                'text-right font-medium',
+                                                meta.quantityClassName,
+                                            )}
+                                        >
+                                            {formatQuantity(
+                                                movement.type,
+                                                movement.quantity,
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="max-w-56 text-sm text-slate-600">
+                                            {movement.reason || '—'}
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                                            {movement.recorded_by}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
         </Card>
     );
 }
