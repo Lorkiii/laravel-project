@@ -19,13 +19,19 @@ class DashboardController extends Controller
 
     private const TREND_DAYS = 7;
 
+    private const ADMIN_TOP_PRODUCTS_LIMIT = 5;
+
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
-        $isStaff = $user->hasRole('Warehouse Staff');
 
-        if (! $isStaff) {
+        if ($user->hasRole('Administrator')) {
+            return $this->adminDashboard();
+        }
+
+        if (! $user->hasRole('Warehouse Staff')) {
             return Inertia::render('Dashboard/Dashboard', [
+                ...$this->emptyAdminSections(),
                 'stats' => $this->stats(),
                 'stock_overview' => null,
                 'attention_items' => null,
@@ -50,6 +56,7 @@ class DashboardController extends Controller
         $inStockCount = $products->filter(fn (Product $product): bool => $product->quantity > 0)->count();
 
         return Inertia::render('Dashboard/Dashboard', [
+            ...$this->emptyAdminSections(),
             'stats' => [
                 'products' => $products->count(),
                 'low_stock' => $products
@@ -67,8 +74,89 @@ class DashboardController extends Controller
                 'trend' => $this->movementTrend($periodMovements, $periodStart),
             ],
             'attention_items' => $this->attentionItems($products),
-            'recent_movements' => $this->recentMovements($user),
+            'recent_movements' => $this->recentMovements(
+                $user,
+                [StockMovement::TYPE_STOCK_IN, StockMovement::TYPE_STOCK_OUT],
+            ),
         ]);
+    }
+
+    private function adminDashboard(): Response
+    {
+        $products = Product::query()->get([
+            'id',
+            'name',
+            'sku',
+            'price',
+            'quantity',
+            'minimum_stock',
+            'status',
+        ]);
+        $periodStart = now()->subDays(self::TREND_DAYS - 1)->startOfDay();
+        $periodMovements = StockMovement::query()
+            ->with('product:id,name,sku')
+            ->where('created_at', '>=', $periodStart)
+            ->orderBy('created_at')
+            ->get(['id', 'product_id', 'type', 'quantity', 'created_at']);
+
+        $todaysMovements = $periodMovements->filter(
+            fn (StockMovement $movement): bool => $movement->created_at->isToday(),
+        );
+
+        $needsAttention = $products
+            ->filter(fn (Product $product): bool => $product->status
+                && $product->quantity <= $product->minimum_stock)
+            ->count();
+
+        return Inertia::render('Dashboard/Dashboard', [
+            'stats' => [
+                'products' => $products->count(),
+                'needs_attention' => $needsAttention,
+                'inventory_value' => round($products->sum(
+                    fn (Product $product): float => (float) $product->price * (int) $product->quantity,
+                ), 2),
+                'adjustments_today' => $todaysMovements
+                    ->where('type', StockMovement::TYPE_ADJUSTMENT)
+                    ->count(),
+            ],
+            'inactive_users' => null,
+            'stock_overview' => null,
+            'attention_items' => null,
+            'recent_movements' => null,
+            'movement_mix' => [
+                'stock_in' => (int) $todaysMovements
+                    ->where('type', StockMovement::TYPE_STOCK_IN)
+                    ->sum('quantity'),
+                'stock_out' => (int) $todaysMovements
+                    ->where('type', StockMovement::TYPE_STOCK_OUT)
+                    ->sum('quantity'),
+                'adjustment' => (int) $todaysMovements
+                    ->where('type', StockMovement::TYPE_ADJUSTMENT)
+                    ->sum(fn (StockMovement $movement): int => abs((int) $movement->quantity)),
+            ],
+            'top_products' => $this->topProducts($periodMovements),
+            'recent_adjustments' => $this->recentMovements(
+                types: [StockMovement::TYPE_ADJUSTMENT],
+            ),
+        ]);
+    }
+
+    /**
+     * @return array{
+     *     inactive_users: null,
+     *     movement_mix: null,
+     *     top_products: null,
+     *     recent_adjustments: null
+     * }
+     */
+    private function emptyAdminSections(): array
+    {
+        return [
+            'inactive_users' => null,
+            'movement_mix' => null,
+            'top_products' => null,
+            'recent_adjustments' => null,
+        ];
     }
 
     /**
@@ -130,6 +218,33 @@ class DashboardController extends Controller
     }
 
     /**
+     * @param  Collection<int, StockMovement>  $periodMovements
+     * @return list<array{id: int, name: string, sku: string, movement_count: int}>
+     */
+    private function topProducts(Collection $periodMovements): array
+    {
+        return $periodMovements
+            ->groupBy('product_id')
+            ->map(function (Collection $group): array {
+                $product = $group->first()->product;
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'movement_count' => $group->count(),
+                ];
+            })
+            ->sortBy([
+                ['movement_count', 'desc'],
+                ['sku', 'asc'],
+            ])
+            ->take(self::ADMIN_TOP_PRODUCTS_LIMIT)
+            ->values()
+            ->all();
+    }
+
+    /**
      * @param  Collection<int, Product>  $products
      * @return list<array{
      *     id: int,
@@ -168,6 +283,7 @@ class DashboardController extends Controller
     }
 
     /**
+     * @param  list<string>|null  $types
      * @return list<array{
      *     id: int,
      *     product: array{name: string, sku: string},
@@ -178,20 +294,26 @@ class DashboardController extends Controller
      *     created_at: string
      * }>
      */
-    private function recentMovements(User $user): array
+    private function recentMovements(?User $user = null, ?array $types = null): array
     {
-        return StockMovement::query()
+        $query = StockMovement::query()
             ->with([
                 'product:id,name,sku',
                 'user:id,first_name,last_name',
             ])
-            ->where('user_id', $user->id)
-            ->whereIn('type', [
-                StockMovement::TYPE_STOCK_IN,
-                StockMovement::TYPE_STOCK_OUT,
-            ])
             ->latest()
-            ->limit(self::STAFF_MOVEMENTS_LIMIT)
+            ->orderByDesc('id')
+            ->limit(self::STAFF_MOVEMENTS_LIMIT);
+
+        if ($user !== null) {
+            $query->where('user_id', $user->id);
+        }
+
+        if ($types !== null) {
+            $query->whereIn('type', $types);
+        }
+
+        return $query
             ->get()
             ->map(fn (StockMovement $movement) => [
                 'id' => $movement->id,

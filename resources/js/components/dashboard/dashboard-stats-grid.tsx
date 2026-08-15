@@ -1,18 +1,23 @@
 import { StatCard } from '@/components/dashboard/stat-card';
-import {
-    buildDashboardStatCards,
-    type DashboardStats,
-} from '@/lib/dashboard/stats';
+import type { DashboardStatCard } from '@/lib/dashboard/stats';
+import { cn } from '@/lib/utils';
 
 type DashboardStatsGridProps = {
-    stats: DashboardStats;
+    cards: DashboardStatCard[];
+    columns?: 3 | 4;
 };
 
-export function DashboardStatsGrid({ stats }: DashboardStatsGridProps) {
-    const cards = buildDashboardStatCards(stats);
-
+export function DashboardStatsGrid({
+    cards,
+    columns = 3,
+}: DashboardStatsGridProps) {
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+            className={cn(
+                'grid gap-4 sm:grid-cols-2',
+                columns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3',
+            )}
+        >
             {cards.map((card) => (
                 <StatCard key={card.key} card={card} />
             ))}

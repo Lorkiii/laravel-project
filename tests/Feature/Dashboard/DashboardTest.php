@@ -59,8 +59,16 @@ class DashboardTest extends TestCase
                 ->component('Dashboard/Dashboard')
                 ->where('stats.products', 3)
                 ->missing('stats.categories')
+                ->missing('stats.needs_attention')
+                ->missing('stats.active_users')
+                ->missing('stats.inventory_value')
+                ->missing('stats.adjustments_today')
                 ->where('stats.low_stock', 1)
                 ->where('stats.movements_today', 4)
+                ->where('inactive_users', null)
+                ->where('movement_mix', null)
+                ->where('top_products', null)
+                ->where('recent_adjustments', null)
                 ->where('stock_overview.total_quantity', 23)
                 ->where('stock_overview.in_stock_count', 2)
                 ->where('stock_overview.out_of_stock_count', 1)
@@ -101,28 +109,178 @@ class DashboardTest extends TestCase
                 ->component('Dashboard/Dashboard')
                 ->where('stats.products', 1)
                 ->missing('stats.categories')
+                ->missing('stats.needs_attention')
+                ->missing('stats.active_users')
+                ->missing('stats.inventory_value')
+                ->missing('stats.adjustments_today')
+                ->has('stats.low_stock')
+                ->where('inactive_users', null)
                 ->where('stock_overview', null)
                 ->where('attention_items', null)
                 ->missing('low_stock_items')
                 ->where('recent_movements', null)
+                ->where('movement_mix', null)
+                ->where('top_products', null)
+                ->where('recent_adjustments', null)
             );
     }
 
-    public function test_administrator_dashboard_does_not_include_staff_sections(): void
+    public function test_administrator_dashboard_includes_oversight_metrics(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('Administrator');
+        $staff = $this->staff();
+
+        Product::factory()->create([
+            'name' => 'Available Product',
+            'sku' => 'DASH-IN',
+            'price' => 10,
+            'quantity' => 20,
+            'minimum_stock' => 5,
+        ]);
+        $lowProduct = Product::factory()->create([
+            'name' => 'Low Product',
+            'sku' => 'DASH-LOW',
+            'price' => 5,
+            'quantity' => 3,
+            'minimum_stock' => 5,
+        ]);
+        $outProduct = Product::factory()->create([
+            'name' => 'Empty Product',
+            'sku' => 'DASH-OUT',
+            'price' => 8,
+            'quantity' => 0,
+            'minimum_stock' => 4,
+        ]);
+        Product::factory()->create([
+            'name' => 'Inactive Empty',
+            'sku' => 'DASH-OFF',
+            'price' => 50,
+            'quantity' => 0,
+            'minimum_stock' => 2,
+            'status' => false,
+        ]);
+
+        $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_IN, 2);
+        $this->movement($lowProduct, $staff, StockMovement::TYPE_STOCK_OUT, 1);
+        $staffAdjustment = $this->movement($outProduct, $staff, StockMovement::TYPE_ADJUSTMENT, -1);
+        $adminAdjustment = $this->movement($lowProduct, $admin, StockMovement::TYPE_ADJUSTMENT, 4);
 
         $this->actingAs($admin)
             ->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard/Dashboard')
+                ->where('stats.products', 4)
                 ->missing('stats.categories')
+                ->missing('stats.low_stock')
+                ->missing('stats.movements_today')
+                ->missing('stats.active_users')
+                ->where('stats.needs_attention', 2)
+                ->where('stats.inventory_value', 215)
+                ->where('stats.adjustments_today', 2)
+                ->where('inactive_users', null)
                 ->where('stock_overview', null)
                 ->where('attention_items', null)
-                ->missing('low_stock_items')
                 ->where('recent_movements', null)
+                ->missing('low_stock_items')
+                ->where('movement_mix.stock_in', 2)
+                ->where('movement_mix.stock_out', 1)
+                ->where('movement_mix.adjustment', 5)
+                ->has('top_products', 2)
+                ->where('top_products.0.sku', 'DASH-LOW')
+                ->where('top_products.0.movement_count', 3)
+                ->where('top_products.1.sku', 'DASH-OUT')
+                ->where('top_products.1.movement_count', 1)
+                ->has('recent_adjustments', 2)
+                ->where('recent_adjustments.0.id', $adminAdjustment->id)
+                ->where('recent_adjustments.0.type', StockMovement::TYPE_ADJUSTMENT)
+                ->where('recent_adjustments.1.id', $staffAdjustment->id)
+                ->where('recent_adjustments.1.recorded_by', "{$staff->first_name} {$staff->last_name}")
+            );
+    }
+
+    public function test_administrator_dashboard_shows_empty_oversight_panels_without_movement_history(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('Administrator');
+        Product::factory()->create([
+            'price' => 12.5,
+            'quantity' => 4,
+            'minimum_stock' => 2,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.needs_attention', 0)
+                ->where('stats.inventory_value', 50)
+                ->where('stats.adjustments_today', 0)
+                ->where('stock_overview', null)
+                ->where('movement_mix.stock_in', 0)
+                ->where('movement_mix.stock_out', 0)
+                ->where('movement_mix.adjustment', 0)
+                ->where('top_products', [])
+                ->where('recent_adjustments', [])
+            );
+    }
+
+    public function test_administrator_dashboard_limits_recent_adjustments_to_five(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('Administrator');
+        $staff = $this->staff();
+        $product = Product::factory()->create();
+
+        foreach (range(1, 4) as $quantity) {
+            $this->movement($product, $staff, StockMovement::TYPE_STOCK_IN, $quantity);
+        }
+
+        foreach (range(1, 6) as $quantity) {
+            $this->movement($product, $admin, StockMovement::TYPE_ADJUSTMENT, -$quantity);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('recent_adjustments', 5)
+                ->where('recent_adjustments.0.type', StockMovement::TYPE_ADJUSTMENT)
+                ->where('recent_adjustments.4.type', StockMovement::TYPE_ADJUSTMENT)
+            );
+    }
+
+    public function test_administrator_top_products_rank_seven_day_movement_counts(): void
+    {
+        $this->travelTo(now()->startOfDay()->addHours(15));
+
+        $admin = User::factory()->create();
+        $admin->assignRole('Administrator');
+        $staff = $this->staff();
+        $quiet = Product::factory()->create(['sku' => 'DASH-QUIET']);
+        $busy = Product::factory()->create(['sku' => 'DASH-BUSY']);
+        $stale = Product::factory()->create(['sku' => 'DASH-STALE']);
+
+        $this->movement($busy, $staff, StockMovement::TYPE_STOCK_IN, 3);
+        $this->movement($busy, $staff, StockMovement::TYPE_STOCK_OUT, 1);
+        $this->movement($quiet, $admin, StockMovement::TYPE_ADJUSTMENT, -1);
+
+        $old = $this->movement($stale, $staff, StockMovement::TYPE_STOCK_IN, 8);
+        $old->forceFill([
+            'created_at' => now()->subDays(8)->setTime(10, 0),
+            'updated_at' => now()->subDays(8)->setTime(10, 0),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('top_products', 2)
+                ->where('top_products.0.sku', 'DASH-BUSY')
+                ->where('top_products.0.movement_count', 2)
+                ->where('top_products.1.sku', 'DASH-QUIET')
+                ->where('top_products.1.movement_count', 1)
             );
     }
 

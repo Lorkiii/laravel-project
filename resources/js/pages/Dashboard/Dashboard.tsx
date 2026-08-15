@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { AdminDashboardSections, type AdminRecentAdjustment } from '@/components/dashboard/admin-dashboard-sections';
 import { DashboardStatsGrid } from '@/components/dashboard/dashboard-stats-grid';
 import { DashboardWelcome } from '@/components/dashboard/dashboard-welcome';
 import {
@@ -7,14 +8,27 @@ import {
     type StaffRecentMovement,
 } from '@/components/dashboard/staff-dashboard-sections';
 import { AppLayout } from '@/layouts/AppLayout';
-import type { DashboardStats, StaffStockOverview } from '@/lib/dashboard/stats';
+import {
+    buildAdminDashboardStatCards,
+    buildDashboardStatCards,
+    isAdminDashboardStats,
+    type AdminDashboardStats,
+    type AdminMovementMix,
+    type AdminTopProduct,
+    type DashboardStats,
+    type StaffStockOverview,
+} from '@/lib/dashboard/stats';
 import type { InventoryItem } from '@/types/inventory';
 
 type DashboardProps = {
-    stats: DashboardStats;
+    stats: DashboardStats | AdminDashboardStats;
+    inactive_users: number | null;
     stock_overview: StaffStockOverview | null;
     attention_items: InventoryItem[] | null;
     recent_movements: StaffRecentMovement[] | null;
+    movement_mix: AdminMovementMix | null;
+    top_products: AdminTopProduct[] | null;
+    recent_adjustments: AdminRecentAdjustment[] | null;
 };
 
 export default function Dashboard({
@@ -22,18 +36,47 @@ export default function Dashboard({
     stock_overview,
     attention_items,
     recent_movements,
+    movement_mix,
+    top_products,
+    recent_adjustments,
 }: DashboardProps) {
+    const isAdmin = isAdminDashboardStats(stats);
+
     return (
         <>
             <DashboardWelcome />
-            <DashboardStatsGrid stats={stats} />
-            {stock_overview ? (
-                <StaffDashboardSections
-                    stockOverview={stock_overview}
-                    attentionItems={attention_items ?? []}
-                    recentMovements={recent_movements ?? []}
-                />
-            ) : null}
+            {isAdmin ? (
+                <>
+                    <DashboardStatsGrid
+                        cards={buildAdminDashboardStatCards(stats)}
+                        columns={4}
+                    />
+                    <AdminDashboardSections
+                        movementMix={
+                            movement_mix ?? {
+                                stock_in: 0,
+                                stock_out: 0,
+                                adjustment: 0,
+                            }
+                        }
+                        topProducts={top_products ?? []}
+                        recentAdjustments={recent_adjustments ?? []}
+                    />
+                </>
+            ) : (
+                <>
+                    <DashboardStatsGrid
+                        cards={buildDashboardStatCards(stats)}
+                    />
+                    {stock_overview ? (
+                        <StaffDashboardSections
+                            stockOverview={stock_overview}
+                            attentionItems={attention_items ?? []}
+                            recentMovements={recent_movements ?? []}
+                        />
+                    ) : null}
+                </>
+            )}
         </>
     );
 }

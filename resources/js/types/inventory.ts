@@ -21,6 +21,7 @@ export type InventoryItem = {
     minimum_stock: number;
     is_active: boolean;
     stock_status: StockStatus;
+    movements?: StockMovement[];
 };
 
 export type StockMovementProductOption = {

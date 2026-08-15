@@ -3,7 +3,6 @@ import { useRef, useState } from 'react';
 
 import { ViewDetailsModal } from '@/components/details/view-details-modal';
 import { InventoryDetailsContent } from '@/components/inventory/inventory-details-content';
-import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { stockStatusMeta } from '@/lib/inventory/stock-status';
-import { inventoryShowUrl } from '@/lib/navigation/urls';
 import type { InventoryItem } from '@/types/inventory';
 
 type InventoryTableProps = {
@@ -135,19 +133,7 @@ export function InventoryTable({ items, onResetFilters }: InventoryTableProps) {
                 open={isDetailsOpen}
                 onOpenChange={setIsDetailsOpen}
                 title={selectedItem?.name ?? 'Inventory details'}
-                description="Read-only inventory details for this product."
-                footer={
-                    selectedItem ? (
-                        <Button asChild>
-                            <PrefetchedLink
-                                href={inventoryShowUrl(selectedItem.id)}
-                                pageName="Inventory/Show"
-                            >
-                                View stock movements
-                            </PrefetchedLink>
-                        </Button>
-                    ) : null
-                }
+                description="Read-only inventory details and recent stock movements for this product."
                 onCloseAutoFocus={(event) => {
                     event.preventDefault();
                     if (selectedItem) {

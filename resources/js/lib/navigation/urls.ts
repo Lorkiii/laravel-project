@@ -74,12 +74,6 @@ export function inventoryUrl(): string {
     return namedOrPath('inventory.index', '/inventory');
 }
 
-export function inventoryShowUrl(productId: number): string {
-    return route().has('inventory.show')
-        ? route('inventory.show', { product: productId })
-        : `/inventory/${productId}`;
-}
-
 export function stockMovementsUrl(type?: string): string {
     if (type && type !== 'all') {
         return route().has('stock-movements.index')

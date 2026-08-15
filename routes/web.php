@@ -63,9 +63,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])
         ->middleware('permission:inventory.view')
         ->name('inventory.index');
-    Route::get('/inventory/{product}', [InventoryController::class, 'show'])
-        ->middleware('permission:inventory.view')
-        ->name('inventory.show');
 
     Route::get('/stock-movements', [StockMovementController::class, 'index'])
         ->middleware('permission:inventory.view_movements')

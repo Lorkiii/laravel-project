@@ -5,16 +5,17 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\StockMovement;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryController extends Controller
 {
-    private const RECENT_MOVEMENTS_LIMIT = 10;
+    private const RECENT_MOVEMENTS_LIMIT = 8;
 
     public function index(): Response
     {
-        $items = Product::query()
+        $products = Product::query()
             ->with('category:id,name')
             ->orderBy('name')
             ->get([
@@ -25,30 +26,46 @@ class InventoryController extends Controller
                 'quantity',
                 'minimum_stock',
                 'status',
-            ])
-            ->map(fn (Product $product) => $this->inventoryItem($product));
+            ]);
+
+        $movementsByProductId = $this->recentMovementsByProductId(
+            $products->pluck('id'),
+        );
+
+        $items = $products->map(function (Product $product) use ($movementsByProductId) {
+            return [
+                ...$this->inventoryItem($product),
+                'movements' => $movementsByProductId
+                    ->get($product->id, collect())
+                    ->map(fn (StockMovement $movement) => $this->movementPayload($product, $movement))
+                    ->values()
+                    ->all(),
+            ];
+        });
 
         return Inertia::render('Inventory/Index', [
             'items' => $items,
         ]);
     }
 
-    public function show(Product $product): Response
+    /**
+     * @param  Collection<int, int>  $productIds
+     * @return Collection<int, Collection<int, StockMovement>>
+     */
+    private function recentMovementsByProductId(Collection $productIds): Collection
     {
-        $product->load('category:id,name');
+        if ($productIds->isEmpty()) {
+            return collect();
+        }
 
-        $movements = $product->stockMovements()
+        return StockMovement::query()
             ->with('user:id,first_name,last_name')
+            ->whereIn('product_id', $productIds)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->limit(self::RECENT_MOVEMENTS_LIMIT)
             ->get()
-            ->map(fn (StockMovement $movement) => $this->movementPayload($product, $movement));
-
-        return Inertia::render('Inventory/Show', [
-            'item' => $this->inventoryItem($product),
-            'movements' => $movements,
-        ]);
+            ->groupBy('product_id')
+            ->map(fn (Collection $movements) => $movements->take(self::RECENT_MOVEMENTS_LIMIT));
     }
 
     /**

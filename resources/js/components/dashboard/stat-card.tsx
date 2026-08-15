@@ -12,7 +12,9 @@ export function StatCard({ card }: StatCardProps) {
             <CardHeader className="pb-2">
                 <Icon className={`h-6 w-6 ${card.iconClassName}`} />
                 <CardDescription>{card.label}</CardDescription>
-                <CardTitle className="text-3xl">{card.value}</CardTitle>
+                <CardTitle className="text-3xl">
+                    {card.displayValue ?? card.value}
+                </CardTitle>
             </CardHeader>
             <CardContent>
                 <p className="text-xs text-muted-foreground">{card.description}</p>
