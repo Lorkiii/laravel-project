@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     ArrowLeftRight,
     ChevronRight,
@@ -7,6 +8,13 @@ import {
 } from 'lucide-react';
 
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
+import {
+    formatMixValue,
+    MixSeriesSwatch,
+    mixSeries,
+    MovementMixChart,
+    MovementMixMetricToggle,
+} from '@/components/dashboard/movement-mix-chart';
 import { PrefetchedLink } from '@/components/navigation/prefetched-link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +27,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { AdminMovementMix, AdminTopProduct } from '@/lib/dashboard/stats';
+import type {
+    AdminMovementMix,
+    AdminTopProduct,
+    MovementMixMetric,
+} from '@/lib/dashboard/stats';
 import { productUrl, stockMovementsUrl } from '@/lib/navigation/urls';
 import { cn } from '@/lib/utils';
 import type { StockMovement, StockMovementType } from '@/types/inventory';
@@ -40,27 +52,6 @@ type AdminDashboardSectionsProps = {
     recentAdjustments: AdminRecentAdjustment[];
     recentMovements: AdminRecentMovement[];
 };
-
-const mixItems = [
-    {
-        key: 'stock_in' as const,
-        label: 'Stock In',
-        barClassName: 'bg-emerald-500',
-        valueClassName: 'text-emerald-700',
-    },
-    {
-        key: 'stock_out' as const,
-        label: 'Stock Out',
-        barClassName: 'bg-red-500',
-        valueClassName: 'text-red-700',
-    },
-    {
-        key: 'adjustment' as const,
-        label: 'Adjustment',
-        barClassName: 'bg-amber-500',
-        valueClassName: 'text-amber-700',
-    },
-];
 
 const typeMeta = {
     stock_in: {
@@ -118,8 +109,8 @@ export function AdminDashboardSections({
 }: AdminDashboardSectionsProps) {
     return (
         <div className="mt-6 space-y-4">
-            <div className="grid items-stretch gap-4 lg:grid-cols-2">
-                <MovementMixCard mix={movementMix} />
+            <MovementMixCard mix={movementMix} />
+            <div className="grid items-stretch gap-4 lg:grid-cols-3">
                 <TopProductsCard products={topProducts} />
                 <RecentAdjustmentsCard adjustments={recentAdjustments} />
                 <AdminQuickActions />
@@ -130,48 +121,72 @@ export function AdminDashboardSections({
 }
 
 function MovementMixCard({ mix }: { mix: AdminMovementMix }) {
-    const maxQuantity = Math.max(mix.stock_in, mix.stock_out, mix.adjustment, 1);
+    const [metric, setMetric] = useState<MovementMixMetric>('quantity');
+    const hasActivity =
+        mix.totals.stock_in.count +
+            mix.totals.stock_out.count +
+            mix.totals.adjustment.count >
+        0;
+    const metricHint =
+        metric === 'quantity' ? 'Units moved by hour' : 'Movements recorded by hour';
 
     return (
-        <Card className="flex h-full flex-col">
-            <CardHeader className="border-b border-border pb-3">
-                <CardTitle>Today&apos;s Movement Mix</CardTitle>
+        <Card>
+            <CardHeader className="flex flex-col gap-3 space-y-0 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <CardTitle>Today&apos;s Movement Mix</CardTitle>
+                    <p className="mt-1 text-xs font-medium text-slate-500">
+                        {metricHint}
+                    </p>
+                </div>
+                <MovementMixMetricToggle value={metric} onChange={setMetric} />
             </CardHeader>
-            <CardContent className="flex flex-1 flex-col justify-center gap-4 p-5">
-                <dl className="space-y-4">
-                    {mixItems.map((item) => {
-                        const value = mix[item.key];
-
-                        return (
-                            <div key={item.key}>
-                                <div className="mb-1.5 flex items-center justify-between gap-3">
-                                    <dt className="text-sm font-medium text-slate-700">
-                                        {item.label}
-                                    </dt>
-                                    <dd
+            <CardContent className="p-5">
+                {hasActivity ? (
+                    <>
+                        <ul className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                            {mixSeries.map((series) => (
+                                <li
+                                    key={series.key}
+                                    className="flex items-center gap-2 text-sm"
+                                >
+                                    <MixSeriesSwatch
+                                        color={series.color}
+                                        dashArray={series.dashArray}
+                                    />
+                                    <span className="text-slate-600">
+                                        {series.label}
+                                    </span>
+                                    <span
                                         className={cn(
-                                            'text-sm font-semibold tabular-nums',
-                                            item.valueClassName,
+                                            'font-semibold tabular-nums',
+                                            series.textClassName,
                                         )}
                                     >
-                                        {value}
-                                    </dd>
-                                </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                    <div
-                                        className={cn(
-                                            'h-full rounded-full',
-                                            item.barClassName,
+                                        {formatMixValue(
+                                            series.key,
+                                            mix.totals[series.key][metric],
+                                            metric,
                                         )}
-                                        style={{
-                                            width: `${(value / maxQuantity) * 100}%`,
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </dl>
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        <MovementMixChart points={mix.points} metric={metric} />
+                    </>
+                ) : (
+                    <EmptyState
+                        title="No stock movements recorded today"
+                        description="Stock in, stock out, and adjustments will appear here by hour."
+                        icon={
+                            <ArrowLeftRight
+                                aria-hidden="true"
+                                className="h-5 w-5"
+                            />
+                        }
+                        className="py-8"
+                    />
+                )}
             </CardContent>
         </Card>
     );

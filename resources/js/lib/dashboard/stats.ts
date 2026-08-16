@@ -33,10 +33,37 @@ export type StaffStockOverview = {
     trend: StockTrendPoint[];
 };
 
+export type MovementMixMetric = 'quantity' | 'count';
+
+export type MovementMixMetrics = {
+    quantity: number;
+    count: number;
+};
+
+export type AdminMovementMixPoint = {
+    hour: number;
+    label: string;
+    stock_in: MovementMixMetrics;
+    stock_out: MovementMixMetrics;
+    adjustment: MovementMixMetrics;
+};
+
 export type AdminMovementMix = {
-    stock_in: number;
-    stock_out: number;
-    adjustment: number;
+    totals: {
+        stock_in: MovementMixMetrics;
+        stock_out: MovementMixMetrics;
+        adjustment: MovementMixMetrics;
+    };
+    points: AdminMovementMixPoint[];
+};
+
+export const emptyAdminMovementMix: AdminMovementMix = {
+    totals: {
+        stock_in: { quantity: 0, count: 0 },
+        stock_out: { quantity: 0, count: 0 },
+        adjustment: { quantity: 0, count: 0 },
+    },
+    points: [],
 };
 
 export type AdminTopProduct = {

@@ -1,5 +1,6 @@
 import {
     ArrowLeftRight,
+    ChevronRight,
     PackagePlus,
     Users,
     Warehouse,
@@ -73,7 +74,7 @@ export function AdminQuickActions() {
             <CardHeader className="border-b border-border pb-3">
                 <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid flex-1 grid-cols-2 content-center gap-2 p-3">
+            <CardContent className="flex flex-1 flex-col gap-2 p-3">
                 {actions.map((action) => {
                     const Icon = action.icon;
 
@@ -82,19 +83,23 @@ export function AdminQuickActions() {
                             key={action.title}
                             href={action.href}
                             pageName={action.pageName}
-                            className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-2 py-3 text-center transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                            className="flex min-h-0 flex-1 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                         >
                             <span
                                 className={cn(
-                                    'flex h-8 w-8 items-center justify-center rounded-lg',
+                                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                                     action.iconClassName,
                                 )}
                             >
                                 <Icon aria-hidden="true" className="h-4 w-4" />
                             </span>
-                            <span className="text-xs font-medium text-slate-900">
+                            <span className="min-w-0 flex-1 text-sm font-medium text-slate-900">
                                 {action.title}
                             </span>
+                            <ChevronRight
+                                aria-hidden="true"
+                                className="h-4 w-4 shrink-0 text-slate-400"
+                            />
                         </PrefetchedLink>
                     );
                 })}

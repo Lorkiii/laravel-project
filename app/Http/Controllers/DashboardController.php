@@ -123,17 +123,7 @@ class DashboardController extends Controller
             'stock_overview' => null,
             'attention_items' => null,
             'recent_movements' => $this->recentMovements(),
-            'movement_mix' => [
-                'stock_in' => (int) $todaysMovements
-                    ->where('type', StockMovement::TYPE_STOCK_IN)
-                    ->sum('quantity'),
-                'stock_out' => (int) $todaysMovements
-                    ->where('type', StockMovement::TYPE_STOCK_OUT)
-                    ->sum('quantity'),
-                'adjustment' => (int) $todaysMovements
-                    ->where('type', StockMovement::TYPE_ADJUSTMENT)
-                    ->sum(fn (StockMovement $movement): int => abs((int) $movement->quantity)),
-            ],
+            'movement_mix' => $this->todaysMovementMix($todaysMovements),
             'top_products' => $this->topProducts($periodMovements),
             'recent_adjustments' => $this->recentMovements(
                 types: [StockMovement::TYPE_ADJUSTMENT],
@@ -173,6 +163,66 @@ class DashboardController extends Controller
             'movements_today' => StockMovement::query()
                 ->whereDate('created_at', now()->toDateString())
                 ->count(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, StockMovement>  $todaysMovements
+     * @return array{
+     *     totals: array{
+     *         stock_in: array{quantity: int, count: int},
+     *         stock_out: array{quantity: int, count: int},
+     *         adjustment: array{quantity: int, count: int}
+     *     },
+     *     points: list<array{
+     *         hour: int,
+     *         label: string,
+     *         stock_in: array{quantity: int, count: int},
+     *         stock_out: array{quantity: int, count: int},
+     *         adjustment: array{quantity: int, count: int}
+     *     }>
+     * }
+     */
+    private function todaysMovementMix(Collection $todaysMovements): array
+    {
+        $today = now()->startOfDay();
+        $points = [];
+
+        for ($hour = 0; $hour < 24; $hour++) {
+            $hourMovements = $todaysMovements->filter(
+                fn (StockMovement $movement): bool => $movement->created_at->hour === $hour,
+            );
+
+            $points[] = [
+                'hour' => $hour,
+                'label' => $today->copy()->addHours($hour)->format('g A'),
+                'stock_in' => $this->mixMetrics($hourMovements, StockMovement::TYPE_STOCK_IN),
+                'stock_out' => $this->mixMetrics($hourMovements, StockMovement::TYPE_STOCK_OUT),
+                'adjustment' => $this->mixMetrics($hourMovements, StockMovement::TYPE_ADJUSTMENT),
+            ];
+        }
+
+        return [
+            'totals' => [
+                'stock_in' => $this->mixMetrics($todaysMovements, StockMovement::TYPE_STOCK_IN),
+                'stock_out' => $this->mixMetrics($todaysMovements, StockMovement::TYPE_STOCK_OUT),
+                'adjustment' => $this->mixMetrics($todaysMovements, StockMovement::TYPE_ADJUSTMENT),
+            ],
+            'points' => $points,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, StockMovement>  $movements
+     * @return array{quantity: int, count: int}
+     */
+    private function mixMetrics(Collection $movements, string $type): array
+    {
+        $typed = $movements->where('type', $type);
+
+        return [
+            'quantity' => (int) $typed->sum('quantity'),
+            'count' => $typed->count(),
         ];
     }
 

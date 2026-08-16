@@ -11,6 +11,7 @@ import { AppLayout } from '@/layouts/AppLayout';
 import {
     buildAdminDashboardStatCards,
     buildDashboardStatCards,
+    emptyAdminMovementMix,
     isAdminDashboardStats,
     type AdminDashboardStats,
     type AdminMovementMix,
@@ -52,13 +53,7 @@ export default function Dashboard({
                         columns={4}
                     />
                     <AdminDashboardSections
-                        movementMix={
-                            movement_mix ?? {
-                                stock_in: 0,
-                                stock_out: 0,
-                                adjustment: 0,
-                            }
-                        }
+                        movementMix={movement_mix ?? emptyAdminMovementMix}
                         topProducts={top_products ?? []}
                         recentAdjustments={recent_adjustments ?? []}
                         recentMovements={recent_movements ?? []}

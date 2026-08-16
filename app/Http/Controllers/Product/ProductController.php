@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Product;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditEvent;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -63,7 +64,15 @@ class ProductController extends Controller
         );
         $validated['created_by'] = $request->user()->id;
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        AuditEvent::record(
+            $request->user(),
+            AuditEvent::ACTION_CREATED,
+            AuditEvent::SUBJECT_PRODUCT,
+            $product,
+            $this->productAuditLabel($product),
+        );
 
         Inertia::flash('successModal', [
             'title' => 'Product created',
@@ -117,7 +126,20 @@ class ProductController extends Controller
             $product,
         );
 
-        $product->update($validated);
+        $product->fill($validated);
+        $changes = AuditEvent::changesFor($product);
+        $product->save();
+
+        if ($changes !== null) {
+            AuditEvent::record(
+                $request->user(),
+                AuditEvent::ACTION_UPDATED,
+                AuditEvent::SUBJECT_PRODUCT,
+                $product,
+                $this->productAuditLabel($product),
+                $changes,
+            );
+        }
 
         Inertia::flash('successModal', [
             'title' => 'Product updated',
@@ -231,5 +253,10 @@ class ProductController extends Controller
         }
 
         return $sku;
+    }
+
+    private function productAuditLabel(Product $product): string
+    {
+        return "{$product->name} ({$product->sku})";
     }
 }

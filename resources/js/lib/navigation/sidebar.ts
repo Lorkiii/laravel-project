@@ -4,6 +4,7 @@ import {
     Boxes,
     ClipboardList,
     FolderTree,
+    History,
     LayoutDashboard,
     Package,
     Shield,
@@ -18,6 +19,7 @@ import {
     isSidebarPathActive,
 } from '@/lib/navigation/sidebar-filter';
 import {
+    auditTrailUrl,
     categoriesUrl,
     dashboardUrl,
     inventoryUrl,
@@ -112,6 +114,14 @@ export function getSidebarNav(): SidebarItem[] {
                     href: usersUrl(),
                     pageName: 'Users/Index',
                     permission: 'users.view',
+                },
+                {
+                    id: 'audit-trail',
+                    label: 'Audit Trail',
+                    icon: History,
+                    href: auditTrailUrl(),
+                    pageName: 'AuditTrail/Index',
+                    permission: 'audit.view',
                 },
             ],
         },

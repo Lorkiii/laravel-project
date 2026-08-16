@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Audit\AuditTrailController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\DashboardController;
@@ -92,6 +93,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/users', [UserController::class, 'store'])
         ->middleware('permission:users.create')
         ->name('users.store');
+
+    Route::get('/audit-trail', [AuditTrailController::class, 'index'])
+        ->middleware('permission:audit.view')
+        ->name('audit-trail.index');
+    Route::get('/audit-trail/export', [AuditTrailController::class, 'export'])
+        ->middleware('permission:audit.export')
+        ->name('audit-trail.export');
 
     Route::get('/settings/account', [AccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account', [AccountController::class, 'update'])->name('settings.account.update');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Category;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditEvent;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,7 +57,15 @@ class CategoryController extends Controller
         ]);
         $validated['created_by'] = $request->user()->id;
 
-        Category::create($validated);
+        $category = Category::create($validated);
+
+        AuditEvent::record(
+            $request->user(),
+            AuditEvent::ACTION_CREATED,
+            AuditEvent::SUBJECT_CATEGORY,
+            $category,
+            "{$category->name} ({$category->code})",
+        );
 
         Inertia::flash('successModal', [
             'title' => 'Category created',

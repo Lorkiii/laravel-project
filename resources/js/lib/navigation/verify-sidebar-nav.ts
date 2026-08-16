@@ -54,6 +54,12 @@ const navTemplate: SidebarFilterItem[] = [
                 href: '/users',
                 permission: 'users.view',
             },
+            {
+                id: 'audit-trail',
+                label: 'Audit Trail',
+                href: '/audit-trail',
+                permission: 'audit.view',
+            },
         ],
     },
 ];
@@ -83,6 +89,8 @@ const rolePermissions = {
         'users.create',
         'users.edit',
         'users.delete',
+        'audit.view',
+        'audit.export',
     ],
     Manager: [
         'products.view',
@@ -131,7 +139,7 @@ const expectations: Record<keyof typeof rolePermissions, string[]> = {
         'inventory',
         'stock-movements',
         'reports',
-        'users',
+        'administration[users,audit-trail]',
     ],
     Manager: [
         'dashboard',

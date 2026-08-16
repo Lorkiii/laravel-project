@@ -154,6 +154,71 @@ export function usersUrl(): string {
     return namedOrPath('users.index', '/users');
 }
 
+type AuditTrailQuery = {
+    period?: number | string;
+    subject_type?: string;
+    action?: string;
+    actor_id?: string;
+};
+
+function auditTrailQuery(filters?: AuditTrailQuery): Record<string, string | number> {
+    const query: Record<string, string | number> = {};
+
+    if (filters?.period) {
+        query.period = filters.period;
+    }
+
+    if (filters?.subject_type && filters.subject_type !== 'all') {
+        query.subject_type = filters.subject_type;
+    }
+
+    if (filters?.action && filters.action !== 'all') {
+        query.action = filters.action;
+    }
+
+    if (filters?.actor_id && filters.actor_id !== 'all') {
+        query.actor_id = filters.actor_id;
+    }
+
+    return query;
+}
+
+export function auditTrailUrl(filters?: AuditTrailQuery): string {
+    const query = auditTrailQuery(filters);
+
+    if (route().has('audit-trail.index')) {
+        return Object.keys(query).length > 0
+            ? route('audit-trail.index', query)
+            : route('audit-trail.index');
+    }
+
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+        params.set(key, String(value));
+    });
+    const search = params.toString();
+
+    return search ? `/audit-trail?${search}` : '/audit-trail';
+}
+
+export function auditTrailExportUrl(filters?: AuditTrailQuery): string {
+    const query = auditTrailQuery(filters);
+
+    if (route().has('audit-trail.export')) {
+        return Object.keys(query).length > 0
+            ? route('audit-trail.export', query)
+            : route('audit-trail.export');
+    }
+
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+        params.set(key, String(value));
+    });
+    const search = params.toString();
+
+    return search ? `/audit-trail/export?${search}` : '/audit-trail/export';
+}
+
 export function settingsAccountUrl(): string {
     return namedOrPath('settings.account', '/settings/account');
 }

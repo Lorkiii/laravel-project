@@ -183,9 +183,13 @@ class DashboardTest extends TestCase
                 ->where('stock_overview', null)
                 ->where('attention_items', null)
                 ->missing('low_stock_items')
-                ->where('movement_mix.stock_in', 2)
-                ->where('movement_mix.stock_out', 1)
-                ->where('movement_mix.adjustment', 5)
+                ->where('movement_mix.totals.stock_in.quantity', 2)
+                ->where('movement_mix.totals.stock_in.count', 1)
+                ->where('movement_mix.totals.stock_out.quantity', 1)
+                ->where('movement_mix.totals.stock_out.count', 1)
+                ->where('movement_mix.totals.adjustment.quantity', 3)
+                ->where('movement_mix.totals.adjustment.count', 2)
+                ->has('movement_mix.points', 24)
                 ->has('top_products', 2)
                 ->where('top_products.0.sku', 'DASH-LOW')
                 ->where('top_products.0.movement_count', 3)
@@ -226,9 +230,13 @@ class DashboardTest extends TestCase
                 ->where('stats.inventory_value', 50)
                 ->where('stats.adjustments_today', 0)
                 ->where('stock_overview', null)
-                ->where('movement_mix.stock_in', 0)
-                ->where('movement_mix.stock_out', 0)
-                ->where('movement_mix.adjustment', 0)
+                ->where('movement_mix.totals.stock_in.quantity', 0)
+                ->where('movement_mix.totals.stock_in.count', 0)
+                ->where('movement_mix.totals.stock_out.quantity', 0)
+                ->where('movement_mix.totals.stock_out.count', 0)
+                ->where('movement_mix.totals.adjustment.quantity', 0)
+                ->where('movement_mix.totals.adjustment.count', 0)
+                ->has('movement_mix.points', 24)
                 ->where('top_products', [])
                 ->where('recent_adjustments', [])
                 ->where('recent_movements', [])
@@ -258,6 +266,51 @@ class DashboardTest extends TestCase
                 ->where('recent_adjustments.0.type', StockMovement::TYPE_ADJUSTMENT)
                 ->where('recent_adjustments.4.type', StockMovement::TYPE_ADJUSTMENT)
                 ->has('recent_movements', 5)
+            );
+    }
+
+    public function test_administrator_movement_mix_groups_today_by_hour_with_signed_adjustments(): void
+    {
+        $this->travelTo(now()->startOfDay()->addHours(10));
+
+        $admin = User::factory()->create();
+        $admin->assignRole('Administrator');
+        $staff = $this->staff();
+        $product = Product::factory()->create();
+
+        $morningIn = $this->movement($product, $staff, StockMovement::TYPE_STOCK_IN, 5);
+        $morningIn->forceFill([
+            'created_at' => now()->setTime(8, 15),
+            'updated_at' => now()->setTime(8, 15),
+        ])->save();
+
+        $morningAdjustment = $this->movement($product, $admin, StockMovement::TYPE_ADJUSTMENT, 4);
+        $morningAdjustment->forceFill([
+            'created_at' => now()->setTime(8, 40),
+            'updated_at' => now()->setTime(8, 40),
+        ])->save();
+
+        $this->movement($product, $staff, StockMovement::TYPE_STOCK_OUT, 2);
+        $this->movement($product, $admin, StockMovement::TYPE_ADJUSTMENT, -3);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('movement_mix.points', 24)
+                ->where('movement_mix.points.8.label', '8 AM')
+                ->where('movement_mix.points.8.stock_in.quantity', 5)
+                ->where('movement_mix.points.8.stock_in.count', 1)
+                ->where('movement_mix.points.8.adjustment.quantity', 4)
+                ->where('movement_mix.points.10.stock_out.quantity', 2)
+                ->where('movement_mix.points.10.stock_out.count', 1)
+                ->where('movement_mix.points.10.adjustment.quantity', -3)
+                ->where('movement_mix.points.10.adjustment.count', 1)
+                ->where('movement_mix.points.9.stock_in.quantity', 0)
+                ->where('movement_mix.totals.stock_in.quantity', 5)
+                ->where('movement_mix.totals.stock_out.quantity', 2)
+                ->where('movement_mix.totals.adjustment.quantity', 1)
+                ->where('movement_mix.totals.adjustment.count', 2)
             );
     }
 
